@@ -96,7 +96,9 @@ for sidx, sname in enumerate(SHOP_KEYS):
         })
 
         # ---- 直播间维度 (34-61) ----
-        sessions = safe_int(df.iloc[r, 34])          # 直播场次
+        # 注意：列34表头为"直播场次"，但实际数据为时间范围字符串（如"10:00-24:00"），非场次计数
+        timeRange = str(df.iloc[r, 34]) if pd.notna(df.iloc[r, 34]) else ''  # 主要时段
+        sessions = safe_int(df.iloc[r, 34]) if isinstance(df.iloc[r, 34], (int, float)) else 0  # 若未来改为数字场次可用
         durMin = safe_float(df.iloc[r, 35])          # 直播时长（M）
         durHour = safe_float(df.iloc[r, 36])         # 直播时长（h）
         ssGmv = safe_float(df.iloc[r, 37])           # 直播间成交金额（场次日维度）
@@ -125,10 +127,11 @@ for sidx, sname in enumerate(SHOP_KEYS):
         newFans = safe_int(df.iloc[r, 60])                 # 新增粉丝数
         avgViewSec = safe_float(df.iloc[r, 61])            # 人均观看时长（s）
 
-        if sessions > 0 or ssGmv > 0:
+        if sessions > 0 or ssGmv > 0 or timeRange:
             session_data.append({
                 'date': date_str,
-                'sessions': sessions, 'durMin': durMin, 'durHour': durHour,
+                'timeRange': timeRange, 'sessions': sessions,
+                'durMin': durMin, 'durHour': durHour,
                 'gmv': ssGmv, 'refund': ssRefund, 'gsv': ssGsv,
                 'gsvPerHour': ssGsvPerHour, 'refundRate': ssRefundRate,
                 'gpm': gpm,

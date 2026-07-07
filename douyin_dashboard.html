@@ -612,7 +612,7 @@ const state = {
   shopFilter:'all',showAvgLine:true,showTop3:true,showTable:true,
   shopPage:1,ssPage:1,qcPage:1,pageSize:15,
   shopKpiSelected:['gmv','gsv','subsidy','orderBuyers','refundRate','avgPrice','feeRatio','yoy'],
-  ssKpiSelected:['days','sessions','gmv','gsv','durHour','gpm','uv'],
+  ssKpiSelected:['days','gmv','gsv','avgGmv','durHour','gpm','uv'],
   qcKpiSelected:['totalSpend','promoGmv','promoRoi','avgPromoRoi','nonGrantSpend','nonGrantFeeRatio']
 };
 // charts
@@ -672,13 +672,12 @@ KPI_GROUPS.forEach(g=>g.items.forEach(i=>{KPI_META[i.key]=i}));
 const SS_KPI_GROUPS = [
   {name:'核心指标',items:[
     {key:'days',label:'直播天数',icon:'radio',calc:d=>d.length,fmt:v=>numFmt(v)},
-    {key:'sessions',label:'总场次',icon:'layers',calc:d=>d.reduce((s,r)=>s+(r.sessions||0),0),fmt:v=>numFmt(v)},
     {key:'gmv',label:'总GMV',icon:'dollar-sign',calc:d=>d.reduce((s,r)=>s+r.gmv,0),fmt:v=>moneyFmt(v)},
     {key:'gsv',label:'直播GSV',icon:'bar-chart-3',calc:d=>d.reduce((s,r)=>s+r.gsv,0),fmt:v=>moneyFmt(v)},
-    {key:'avgGmv',label:'场均GMV',icon:'dollar-sign',calc:d=>{const l=d.length;return l?d.reduce((s,r)=>s+r.gmv,0)/l:0},fmt:v=>moneyFmt(Math.round(v))}
+    {key:'avgGmv',label:'场均GMV',icon:'dollar-sign',calc:d=>{const l=d.length;return l?d.reduce((s,r)=>s+r.gmv,0)/l:0},fmt:v=>moneyFmt(Math.round(v))},
+    {key:'durHour',label:'直播时长(h)',icon:'clock',calc:d=>d.reduce((s,r)=>s+(r.durHour||0),0),fmt:v=>numFmt(Math.round(v))}
   ]},
   {name:'时长维度',items:[
-    {key:'durHour',label:'直播时长(h)',icon:'clock',calc:d=>d.reduce((s,r)=>s+(r.durHour||0),0),fmt:v=>numFmt(Math.round(v))},
     {key:'durMin',label:'直播时长(M)',icon:'clock',calc:d=>d.reduce((s,r)=>s+(r.durMin||0),0),fmt:v=>numFmt(Math.round(v))}
   ]},
   {name:'效率指标',items:[
@@ -1373,10 +1372,59 @@ function renderShopTable(data){
 // ============================================================
 //  9. SESSION TAB
 // ============================================================
+function getISOWeek(dateStr){
+  const d = new Date(dateStr);
+  const day = (d.getDay() + 6) % 7;
+  d.setDate(d.getDate() - day + 3);
+  const year = d.getFullYear();
+  const firstThursday = new Date(year, 0, 4);
+  const firstDay = (firstThursday.getDay() + 6) % 7;
+  firstThursday.setDate(firstThursday.getDate() - firstDay);
+  const days = Math.floor((d - firstThursday) / 86400000);
+  const week = Math.floor(days / 7) + 1;
+  return `${year}-W${String(week).padStart(2,'0')}`;
+}
+
+function aggregateSessionData(data, gran){
+  if(gran==='day' || !data.length) return data;
+  const map={};
+  const sumKeys=['gmv','refund','gsv','durMin','durHour','liveExpose','uv','prodExpose','prodClick','dealBuyers','interactUsers','newFans','sessions'];
+  data.forEach(d=>{
+    const key = gran==='week'?getISOWeek(d.date):d.date.slice(0,7);
+    if(!map[key]) map[key]={date:key, shop:state.shopFilter, count:0, weightedViewSec:0, timeRanges:new Set()};
+    const o=map[key];
+    o.count++;
+    sumKeys.forEach(k=>{ o[k]=(o[k]||0)+(d[k]||0); });
+    o.weightedViewSec += (d.avgViewSec||0)*(d.uv||0);
+    if(d.timeRange) o.timeRanges.add(d.timeRange);
+  });
+  return Object.values(map).map(o=>{
+    o.avgViewSec = o.uv ? o.weightedViewSec/o.uv : 0;
+    o.gsvPerHour = o.durHour ? o.gsv/o.durHour : 0;
+    o.gpm = o.uv ? o.gmv/o.uv*1000 : 0;
+    o.refundRate = o.gmv ? o.refund/o.gmv : 0;
+    o.expViewRate = o.liveExpose ? o.uv/o.liveExpose : 0;
+    o.viewProdExposeRate = o.uv ? o.prodExpose/o.uv : 0;
+    o.prodExpClickRate = o.prodExpose ? o.prodClick/o.prodExpose : 0;
+    o.prodClickDealRate = o.prodClick ? o.dealBuyers/o.prodClick : 0;
+    o.liveExpDealRate = o.liveExpose ? o.dealBuyers/o.liveExpose : 0;
+    o.viewDealRate = o.uv ? o.dealBuyers/o.uv : 0;
+    o.expInteractRate = o.liveExpose ? o.interactUsers/o.liveExpose : 0;
+    o.viewInteractRate = o.uv ? o.interactUsers/o.uv : 0;
+    o.followRate = o.uv ? o.newFans/o.uv : 0;
+    o.uvPerHour = o.durHour ? o.uv/o.durHour : 0;
+    o.liveAvgPrice = o.dealBuyers ? o.gmv/o.dealBuyers : 0;
+    o.timeRange = o.timeRanges.size ? Array.from(o.timeRanges).slice(0,3).join(', ') : '—';
+    delete o.weightedViewSec; delete o.timeRanges; delete o.count;
+    return o;
+  });
+}
+
 function renderSessionTab(){
   let data = SESSION_DATA;
   if(state.shopFilter!=='all') data = data.filter(d=>d.shop===state.shopFilter);
   data = filterByDate(data,state.start,state.end,'date');
+  data = aggregateSessionData(data, state.gran);
   renderSsKpi(data);
   renderSsChart(data);
   renderSsScatter(data);
@@ -1459,7 +1507,7 @@ function renderSsScatter(data){
 function renderSsRank(data){
   const ranked = [...data].sort((a,b)=>b.gmv-a.gmv).slice(0,20);
   const maxGmv = ranked.length?ranked[0].gmv:1;
-  let html='<thead><tr><th>排名</th><th>日期</th><th class="num">场次</th><th class="num">GMV</th><th class="num">UV</th><th class="num">GPM</th><th>效率</th></tr></thead><tbody>';
+  let html='<thead><tr><th>排名</th><th>日期</th><th>主要时段</th><th class="num">GMV</th><th class="num">UV</th><th class="num">GPM</th><th>效率</th></tr></thead><tbody>';
   ranked.forEach((d,i)=>{
     const pct = (d.gmv/maxGmv*100).toFixed(0);
     let rankClass = i===0?'gold':i===1?'silver':i===2?'bronze':'';
@@ -1468,7 +1516,7 @@ function renderSsRank(data){
     let effLabel = gpm>=3000?'S':gpm>=2000?'A':gpm>=1000?'B':'C';
     html+=`<tr><td><span class="rank-badge ${rankClass}">${i+1}</span></td>
       <td style="font-weight:600">${d.date}</td>
-      <td>${d.sessions||1}</td>
+      <td>${d.timeRange||'—'}</td>
       <td class="num">${moneyFmt(d.gmv)}</td>
       <td class="num">${numFmt(d.uv||0)}</td>
       <td class="num">${numFmt(gpm)}</td>
@@ -1488,11 +1536,11 @@ function renderSsTable(data){
   const pages = Math.ceil(total/sz)||1;
   const start = (pg-1)*sz;
   const pageData = data.slice(start,start+sz);
-  document.getElementById('ssTableInfo').textContent = `共 ${total} 天 | 第 ${pg}/${pages} 页`;
+  document.getElementById('ssTableInfo').textContent = `共 ${total} 条 | 第 ${pg}/${pages} 页`;
   if(!total){document.getElementById('ssTableWrap').innerHTML='<div class="empty-state"><p>暂无数据</p></div>';return;}
-  let html = '<table><thead><tr><th>日期</th><th class="num">场次</th><th>店铺</th><th class="num">时长</th><th class="num">GMV</th><th class="num">UV</th><th class="num">GPM</th><th class="num">退款率</th><th class="num">人均观看s</th></tr></thead><tbody>';
+  let html = '<table><thead><tr><th>日期</th><th>主要时段</th><th>店铺</th><th class="num">时长</th><th class="num">GMV</th><th class="num">UV</th><th class="num">GPM</th><th class="num">退款率</th><th class="num">人均观看s</th></tr></thead><tbody>';
   pageData.forEach(d=>{
-    html+=`<tr><td>${d.date}</td><td class="num">${d.sessions||0}</td><td>${SHOP_NAMES[d.shop]}</td>
+    html+=`<tr><td>${d.date}</td><td>${d.timeRange||'—'}</td><td>${SHOP_NAMES[d.shop]}</td>
       <td class="num">${Math.round(d.durMin||0)}min</td><td class="num">${moneyFmt(d.gmv)}</td>
       <td class="num">${numFmt(d.uv||0)}</td>
       <td class="num">${numFmt(d.gpm||0)}</td>

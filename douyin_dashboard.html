@@ -827,6 +827,9 @@ function renderActiveTab(){
 // ============================================================
 function renderOverviewTab(){
   const data = getFilteredShopData('all');
+  if(state.gran!=='day'){
+    Object.keys(data).forEach(s=>{ data[s]=aggregateShopData(data[s],state.gran); });
+  }
   renderOvKpi(data);
   renderOvShopCompare(data);
   renderOvChart(data);

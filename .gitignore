@@ -1,0 +1,14 @@
+# Generated JSON/JS data files
+dashboard_data.json
+dashboard_data.js
+
+# Data source (sensitive)
+抖音自营店铺数据源.xlsx*
+直播数据源看板设计需求.xlsx*
+
+# WorkBuddy internal state
+.workbuddy/
+
+# OS files
+Thumbs.db
+.DS_Store

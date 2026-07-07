@@ -1078,7 +1078,7 @@ function renderOvTable(data){
 // ============================================================
 function renderShopTab(){
   const k = state.activeShop;
-  const data = filterByDate(SHOP_DATA[k],state.start,state.end);
+  const data = aggregateShopData(filterByDate(SHOP_DATA[k],state.start,state.end), state.gran);
   renderShopKpi(data,k);
   renderShopChart(data,k);
   renderShopChannel(data,k);
@@ -1420,6 +1420,61 @@ function aggregateSessionData(data, gran){
   });
 }
 
+function aggregateShopData(data, gran){
+  if(gran==='day'||!data.length) return data;
+  const map={};
+  const sumKeys=['gmv','gsv','subsidy','coupon','payGsv','refundAmt','gsvTarget','prevYearGsv','liveGsv','mallGsv','refundPayTime','liveRefund','mallRefund','liveAmt','cardOrder','otherRe','shortVideo','orderBuyers','clickUsers','exposeUsers'];
+  data.forEach(d=>{
+    const key=gran==='week'?getISOWeek(d.date):d.date.slice(0,7);
+    if(!map[key]) map[key]={date:key,count:0,gsvWeight:0,feeRatioW:0};
+    const o=map[key];
+    o.count++;o.gsvWeight+=d.gsv;o.feeRatioW+=(d.feeRatio||0)*d.gsv;
+    sumKeys.forEach(k=>{o[k]=(o[k]||0)+(d[k]||0)});
+  });
+  return Object.values(map).map(o=>{
+    o.refundRate=o.gmv?(1-o.gsv/o.gmv):0;
+    o.achieveRate=o.gsvTarget?o.gsv/o.gsvTarget:0;
+    o.yoy=o.prevYearGsv?(o.gsv-o.prevYearGsv)/o.prevYearGsv:0;
+    o.mallBeforeRatio=o.gmv?(o.cardOrder+o.otherRe+o.shortVideo)/o.gmv:0;
+    o.mallAfterRatio=o.gsv?o.mallGsv/o.gsv:0;
+    o.feeRatio=o.gsvWeight?o.feeRatioW/o.gsvWeight:0;
+    o.avgPrice=o.orderBuyers?o.gmv/o.orderBuyers:0;
+    o.expClickRate=o.exposeUsers?o.clickUsers/o.exposeUsers:0;
+    o.clickConvRate=o.clickUsers?o.orderBuyers/o.clickUsers:0;
+    o.expConvRate=o.exposeUsers?o.orderBuyers/o.exposeUsers:0;
+    o.refundRate2=o.gmv?o.refundPayTime/o.gmv:0;
+    o.liveRefundRate=o.liveAmt?o.liveRefund/o.liveAmt:0;
+    o.mallRefundRate=(o.cardOrder+o.otherRe+o.shortVideo)?o.mallRefund/(o.cardOrder+o.otherRe+o.shortVideo):0;
+    delete o.count;delete o.gsvWeight;delete o.feeRatioW;
+    return o;
+  });
+}
+function aggregateQcData(data, gran){
+  if(gran==='day'||!data.length) return data;
+  const map={};
+  const sumKeys=['totalSpend','promoGmv','liveSpend','livePromoGmv','directSpend','directGmv','materialSpend','materialGmv','mallSpend','mallPromoGmv','nonGrantSpend'];
+  data.forEach(d=>{
+    const key=gran==='week'?getISOWeek(d.date):d.date.slice(0,7);
+    if(!map[key]) map[key]={date:key,count:0,shortRatioW:0,liveGmvWeight:0,nonGrantW:0,gsvW:0};
+    const o=map[key];
+    o.count++;o.shortRatioW+=(d.shortVideoRatio||0)*(d.livePromoGmv||0);
+    o.liveGmvWeight+=d.livePromoGmv||0;
+    o.nonGrantW+=(d.nonGrantFeeRatio||0)*(d.nonGrantSpend||0);
+    o.gsvW+=d.nonGrantSpend||0;
+    sumKeys.forEach(k=>{o[k]=(o[k]||0)+(d[k]||0)});
+  });
+  return Object.values(map).map(o=>{
+    o.promoRoi=+(o.totalSpend?o.promoGmv/o.totalSpend:0).toFixed(2);
+    o.livePromoRoi=+(o.liveSpend?o.livePromoGmv/o.liveSpend:0).toFixed(2);
+    o.directRoi=+(o.directSpend?o.directGmv/o.directSpend:0).toFixed(2);
+    o.materialRoi=+(o.materialSpend?o.materialGmv/o.materialSpend:0).toFixed(2);
+    o.mallPromoRoi=+(o.mallSpend?o.mallPromoGmv/o.mallSpend:0).toFixed(2);
+    o.shortVideoRatio=o.liveGmvWeight?o.shortRatioW/o.liveGmvWeight:0;
+    o.nonGrantFeeRatio=o.gsvW?o.nonGrantW/o.gsvW:0;
+    delete o.count;delete o.shortRatioW;delete o.liveGmvWeight;delete o.nonGrantW;delete o.gsvW;
+    return o;
+  });
+}
 function renderSessionTab(){
   let data = SESSION_DATA;
   if(state.shopFilter!=='all') data = data.filter(d=>d.shop===state.shopFilter);
@@ -1559,6 +1614,7 @@ function renderQianchuanTab(){
   let data = QC_DATA;
   if(state.shopFilter!=='all') data = data.filter(d=>d.shop===state.shopFilter);
   data = filterByDate(data,state.start,state.end,'date');
+  data = aggregateQcData(data, state.gran);
   renderQcKpi(data);
   renderQcSpendChart(data);
   renderQcRoiChart(data);

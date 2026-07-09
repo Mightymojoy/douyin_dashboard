@@ -88,6 +88,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);-webkit-font
 
 /* ========== KPI Row ========== */
 .kpi-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-bottom:18px}
+/* 对比周期 KPI 行 */
+.kpi-row.compare-row{border-top:2px dashed var(--gold);margin-top:6px;padding-top:16px;position:relative}
+.kpi-row.compare-row::before{content:'对比周期';position:absolute;top:-8px;left:0;font-size:10px;color:var(--gold);background:var(--bg-card);padding:0 10px;font-weight:600;z-index:1}
 .kpi-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;transition:all var(--transition)}
 .kpi-card:hover{border-color:var(--border-hover)}
 .kpi-card .kpi-icon{width:32px;height:32px;border-radius:var(--radius-xs);background:var(--gold-dim);display:flex;align-items:center;justify-content:center;margin-bottom:10px}
@@ -308,6 +311,7 @@ tr:nth-child(even) td{background:rgba(0,0,0,.015)}
   <!-- ===== TAB 1: 总览 ===== -->
   <div class="tab-content active" id="tabOverview">
     <div class="kpi-row" id="ovKpiRow"></div>
+    <div class="kpi-row compare-row" id="ovCompareRow" style="display:none"></div>
     <div class="shop-compare-grid" id="ovShopCompare"></div>
     <div class="card">
       <div class="card-header">
@@ -358,6 +362,7 @@ tr:nth-child(even) td{background:rgba(0,0,0,.015)}
       </div>
     </div>
     <div class="kpi-row" id="shopKpiRow"></div>
+    <div class="kpi-row compare-row" id="shopCompareRow" style="display:none"></div>
     <div class="card">
       <div class="card-header">
         <h4><i data-lucide="bar-chart-3"></i>指标趋势</h4>
@@ -439,7 +444,7 @@ tr:nth-child(even) td{background:rgba(0,0,0,.015)}
   <!-- ===== TAB 3: 直播场次 ===== -->
   <div class="tab-content" id="tabSession">
     <div class="kpi-row" id="ssKpiRow"></div>
-    <!-- Session KPI 选择器 -->
+    <div class="kpi-row compare-row" id="ssCompareRow" style="display:none"></div>
     <div class="kpi-selector">
       <button id="ssKpiToggle" class="toggle-btn" onclick="toggleSsKpiPanel()"><i data-lucide="sliders-horizontal"></i> 选择指标 <span id="ssKpiCount">7</span>/<span>30</span></button>
       <div id="ssKpiPanel" class="kpi-panel" style="display:none">
@@ -516,6 +521,7 @@ tr:nth-child(even) td{background:rgba(0,0,0,.015)}
       </div>
     </div>
     <div class="kpi-row" id="qcKpiRow"></div>
+    <div class="kpi-row compare-row" id="qcCompareRow" style="display:none"></div>
     <div class="card">
       <div class="card-header">
         <h4><i data-lucide="bar-chart-3"></i>消耗趋势</h4>
@@ -747,6 +753,30 @@ function getCompareData(type, shopKey){
   return [];
 }
 
+// 将对比周期数据按主周期日期对齐（返回数组，缺失补 null）
+function alignByDate(mainLabels, compareData, key){
+  const map = {};
+  compareData.forEach(d=>{ map[d.date] = (map[d.date]||0) + (d[key]||0); });
+  return mainLabels.map(date=>map[date]||null);
+}
+
+// 渲染对比周期 KPI 行（各 tab 调用）
+function renderCompareKpiRow(elId, compareData, items){
+  const el = document.getElementById(elId);
+  if(!state.compareOn || !compareData || !compareData.length){
+    el.style.display='none'; return;
+  }
+  el.style.display='grid';
+  let html = '';
+  items.forEach(item=>{
+    const val = item.calc(compareData);
+    html += `<div class="kpi-card"><div class="kpi-icon"><i data-lucide="${item.icon}"></i></div>
+      <div class="kpi-label">${item.label}</div><div class="kpi-value">${item.fmt(val)}</div></div>`;
+  });
+  el.innerHTML = html;
+  setTimeout(()=>{try{lucide.createIcons()}catch(e){}},50);
+}
+
 // ============================================================
 //  3.5 KPI META
 // ============================================================
@@ -965,9 +995,43 @@ function renderOverviewTab(){
     Object.keys(data).forEach(s=>{ data[s]=aggregateShopData(data[s],state.gran); });
   }
   renderOvKpi(data);
+  // 对比周期 KPI
+  if(state.compareOn){
+    const cData = getFilteredShopDataWithRange('all', state.cStart, state.cEnd);
+    if(state.gran!=='day') Object.keys(cData).forEach(s=>{ cData[s]=aggregateShopData(cData[s],state.gran); });
+    const cTotal = {gmv:0,gsv:0,orderBuyers:0,gmvR:0,gsvR:0,prevYearGsv:0,feeSum:0,couponSum:0};
+    Object.values(cData).forEach(arr=>{arr.forEach(d=>{cTotal.gmv+=d.gmv;cTotal.gsv+=d.gsv;cTotal.orderBuyers+=d.orderBuyers||0;cTotal.gmvR+=d.gmv;cTotal.gsvR+=d.gsv;cTotal.prevYearGsv+=d.prevYearGsv||0;cTotal.feeSum+=(d.feeRatio||0)*d.gsv;cTotal.couponSum+=d.coupon||0;})});
+    // 对比千川总消耗
+    let cNonGrant = 0;
+    QC_DATA.filter(d=>d.date>=state.cStart&&d.date<=state.cEnd).forEach(d=>{
+      if(state.shopFilter==='all'||d.shop===state.shopFilter) cNonGrant+=d.nonGrantSpend||0;
+    });
+    renderCompareKpiRow('ovCompareRow', [cTotal], [
+      {label:'对比总GMV',icon:'dollar-sign',calc:d=>d.reduce((s,r)=>s+r.gmv,0),fmt:v=>moneyFmt(v)},
+      {label:'对比总GSV',icon:'bar-chart-3',calc:d=>d.reduce((s,r)=>s+r.gsv,0),fmt:v=>moneyFmt(v)},
+      {label:'对比成交人数',icon:'users',calc:d=>d.reduce((s,r)=>s+(r.orderBuyers||0),0),fmt:v=>numFmt(v)},
+      {label:'对比退款率',icon:'percent',calc:d=>{const g=d.reduce((s,r)=>s+r.gmvR,0);const gv=d.reduce((s,r)=>s+r.gsvR,0);return g?(1-gv/g)*100:0},fmt:v=>pctFmt(v)},
+      {label:'对比费比',icon:'percent',calc:d=>{const f=d.reduce((s,r)=>s+r.feeSum,0);const g=d.reduce((s,r)=>s+r.gsv,0);return g?+(f/g*100).toFixed(1):0},fmt:v=>pctFmt(v)},
+      {label:'对比客单价',icon:'tag',calc:d=>{const g=d.reduce((s,r)=>s+r.gmv,0);const b=d.reduce((s,r)=>s+(r.orderBuyers||0),0);return b?Math.round(g/b):0},fmt:v=>'¥'+numFmt(v)},
+      {label:'对比优惠券',icon:'credit-card',calc:d=>d.reduce((s,r)=>s+r.couponSum,0),fmt:v=>moneyFmt(v)},
+      {label:'对比总消耗',icon:'wallet',calc:()=>cNonGrant,fmt:v=>moneyFmt(v)}
+    ]);
+  } else {
+    document.getElementById('ovCompareRow').style.display='none';
+  }
   renderOvShopCompare(data);
   renderOvChart(data);
   renderOvTable(data);
+}
+
+function getFilteredShopDataWithRange(forceShop, s, e){
+  const shop = forceShop||state.shopFilter;
+  let result = {};
+  Object.keys(SHOP_DATA).forEach(k=>{
+    if(shop!=='all' && k!==shop) return;
+    result[k] = filterByDate(SHOP_DATA[k], s, e);
+  });
+  return result;
 }
 
 function getFilteredShopData(forceShop){
@@ -1167,6 +1231,19 @@ function renderOvChart(data){
   const avgY1 = allY1.length ? allY1.reduce((s,v)=>s+v,0)/allY1.length : 0;
 
   let datasets = [...y1Datasets];
+
+  // 对比周期曲线（各店铺汇总）
+  if(state.compareOn){
+    const cData = {};
+    shops.forEach(k=>{ cData[k] = getCompareData('shop',k); });
+    const compareTotal = labels.map((_,i)=>shops.reduce((s,k)=>s+((cData[k]&&cData[k][i])?cData[k][i][y1Key]||0:0),0));
+    datasets.push({
+      label:'对比周期',data:compareTotal,
+      type:'line',borderColor:'rgba(201,169,98,0.35)',backgroundColor:'transparent',
+      borderDash:[4,3],fill:false,tension:0.3,pointRadius:1,pointHitRadius:5,order:0,yAxisID:'y'
+    });
+  }
+
   let y2Scale = null;
   let y2IsPct = false;
 
@@ -1290,6 +1367,18 @@ function renderShopTab(){
   const k = state.activeShop;
   const data = aggregateShopData(filterByDate(SHOP_DATA[k],state.start,state.end), state.gran);
   renderShopKpi(data,k);
+  // 对比周期 KPI（复用主KPI选择）
+  if(state.compareOn){
+    const cData = aggregateShopData(filterByDate(SHOP_DATA[k],state.cStart,state.cEnd), state.gran);
+    const compareItems = state.shopKpiSelected.map(key=>{
+      const m = KPI_META[key];
+      if(!m) return null;
+      return {label:'对比'+m.label, icon:m.icon, calc:m.calc, fmt:m.fmt};
+    }).filter(Boolean);
+    renderCompareKpiRow('shopCompareRow', cData, compareItems);
+  } else {
+    document.getElementById('shopCompareRow').style.display='none';
+  }
   renderShopChart(data,k);
   renderShopChannel(data,k);
   renderShopTable(data);
@@ -1529,15 +1618,29 @@ function renderShopChart(data,k){
 
   const y1Label = {gmv:'GMV',gsv:'GSV',orderBuyers:'成交人数',liveGsv:'直播GSV',mallGsv:'商城GSV',payGsv:'用户支付GSV',prevYearGsv:'25年同期GSV'}[y1Key]||y1Key;
 
+  const shopDatasets = [
+    {label:y1Label,data:y1Data,backgroundColor:y1BarColors,borderColor:y1BorderColors,borderWidth:1,order:2,yAxisID:'y'},
+    {label:y2LabelText,data:y2Data,type:'line',borderColor:'#e07b4a',backgroundColor:'rgba(224,123,74,0.08)',fill:true,tension:0.3,pointRadius:3,order:1,yAxisID:'y1'}
+  ];
+  // 对比周期曲线
+  if(state.compareOn && y1Key!=='prevYearGsv'){
+    const cData = getCompareData('shop',k);
+    const cVals = alignByDate(labels, cData, y1Key);
+    if(cVals.some(v=>v!==null)){
+      shopDatasets.push({
+        label:'对比周期',data:cVals,
+        type:'line',borderColor:'rgba(201,169,98,0.35)',backgroundColor:'transparent',
+        borderDash:[4,3],fill:false,tension:0.3,pointRadius:1,pointHitRadius:5,order:0,yAxisID:'y'
+      });
+    }
+  }
+
   if(charts.shop){charts.shop.destroy()}
   const ctx = document.getElementById('shopChart').getContext('2d');
   charts.shop = new Chart(ctx,{
     type:'bar',data:{
       labels,
-      datasets:[
-        {label:y1Label,data:y1Data,backgroundColor:y1BarColors,borderColor:y1BorderColors,borderWidth:1,order:2,yAxisID:'y'},
-        {label:y2LabelText,data:y2Data,type:'line',borderColor:'#e07b4a',backgroundColor:'rgba(224,123,74,0.08)',fill:true,tension:0.3,pointRadius:3,order:1,yAxisID:'y1'}
-      ]
+      datasets: shopDatasets
     },
     options:{
       responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
@@ -1708,6 +1811,20 @@ function renderSessionTab(){
   data = filterByDate(data,state.start,state.end,'date');
   data = aggregateSessionData(data, state.gran);
   renderSsKpi(data);
+  // 对比周期 KPI（复用主KPI选择）
+  if(state.compareOn){
+    let cData = SESSION_DATA;
+    if(state.shopFilter!=='all') cData = cData.filter(d=>d.shop===state.shopFilter);
+    cData = aggregateSessionData(filterByDate(cData,state.cStart,state.cEnd,'date'), state.gran);
+    const compareItems = state.ssKpiSelected.map(key=>{
+      const m = SS_KPI_META[key];
+      if(!m) return null;
+      return {label:'对比'+m.label, icon:m.icon, calc:m.calc, fmt:m.fmt};
+    }).filter(Boolean);
+    renderCompareKpiRow('ssCompareRow', cData, compareItems);
+  } else {
+    document.getElementById('ssCompareRow').style.display='none';
+  }
   renderSsChart(data);
   renderSsScatter(data);
   renderSsRank(data);
@@ -1760,15 +1877,29 @@ function renderSsChart(data){
   const y1Labels = {gmv:'GMV',gsv:'GSV',uv:'UV',dealBuyers:'成交人数',durMin:'时长(分)',durHour:'时长(时)',refund:'退款金额'};
   const y1Label = y1Labels[y1Key]||'指标';
 
+  const ssDatasets = [
+    {label:y1Label,data:y1Data,backgroundColor:y1BarColors,borderColor:y1BorderColors,borderWidth:1,order:2,yAxisID:'y'},
+    {label:y2LabelText,data:y2Data,type:'line',borderColor:'#4a9e8e',backgroundColor:'rgba(74,158,142,0.08)',fill:true,tension:0.3,pointRadius:3,order:1,yAxisID:'y1'}
+  ];
+  // 对比周期曲线
+  if(state.compareOn){
+    const cData = getCompareData('session');
+    const cVals = alignByDate(labels, cData, y1Key);
+    if(cVals.some(v=>v!==null)){
+      ssDatasets.push({
+        label:'对比周期',data:cVals,
+        type:'line',borderColor:'rgba(74,158,142,0.35)',backgroundColor:'transparent',
+        borderDash:[4,3],fill:false,tension:0.3,pointRadius:1,pointHitRadius:5,order:0,yAxisID:'y'
+      });
+    }
+  }
+
   if(charts.ss){charts.ss.destroy()}
   const ctx = document.getElementById('ssChart').getContext('2d');
   charts.ss = new Chart(ctx,{
     type:'bar',data:{
       labels,
-      datasets:[
-        {label:y1Label,data:y1Data,backgroundColor:y1BarColors,borderColor:y1BorderColors,borderWidth:1,order:2,yAxisID:'y'},
-        {label:y2LabelText,data:y2Data,type:'line',borderColor:'#4a9e8e',backgroundColor:'rgba(74,158,142,0.08)',fill:true,tension:0.3,pointRadius:3,order:1,yAxisID:'y1'}
-      ]
+      datasets: ssDatasets
     },
     options:{
       responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
@@ -1864,6 +1995,20 @@ function renderQianchuanTab(){
   data = filterByDate(data,state.start,state.end,'date');
   data = aggregateQcData(data, state.gran);
   renderQcKpi(data);
+  // 对比周期 KPI（复用主KPI选择）
+  if(state.compareOn){
+    let cData = QC_DATA;
+    if(state.shopFilter!=='all') cData = cData.filter(d=>d.shop===state.shopFilter);
+    cData = aggregateQcData(filterByDate(cData,state.cStart,state.cEnd,'date'), state.gran);
+    const compareItems = state.qcKpiSelected.map(key=>{
+      const m = QC_KPI_META[key];
+      if(!m) return null;
+      return {label:'对比'+m.label, icon:m.icon, calc:m.calc, fmt:m.fmt};
+    }).filter(Boolean);
+    renderCompareKpiRow('qcCompareRow', cData, compareItems);
+  } else {
+    document.getElementById('qcCompareRow').style.display='none';
+  }
   renderQcSpendChart(data);
   renderQcRoiChart(data);
   renderQcRank(data);
@@ -1922,15 +2067,29 @@ function renderQcSpendChart(data){
   const y1Labels = {totalSpend:'总消耗',promoGmv:'推广GMV',liveSpend:'直播花费',livePromoGmv:'直播推广GMV',directSpend:'直投花费',directGmv:'直投GMV',materialSpend:'素材花费',materialGmv:'素材GMV',mallSpend:'商城花费',mallPromoGmv:'商城推广GMV',nonGrantSpend:'非赠款花费'};
   const y1Label = y1Labels[y1Key]||y1Key;
 
+  const qcDatasets = [
+    {label:y1Label,data:y1Data,backgroundColor:y1BarColors,borderColor:y1BorderColors,borderWidth:1,order:2,yAxisID:'y'},
+    {label:y2LabelText,data:y2Data,type:'line',borderColor:'#4a9e8e',backgroundColor:'rgba(74,158,142,0.08)',fill:true,tension:0.3,pointRadius:3,order:1,yAxisID:'y1'}
+  ];
+  // 对比周期曲线
+  if(state.compareOn){
+    const cData = getCompareData('qianchuan');
+    const cVals = alignByDate(labels, cData, y1Key);
+    if(cVals.some(v=>v!==null)){
+      qcDatasets.push({
+        label:'对比周期',data:cVals,
+        type:'line',borderColor:'rgba(74,158,142,0.35)',backgroundColor:'transparent',
+        borderDash:[4,3],fill:false,tension:0.3,pointRadius:1,pointHitRadius:5,order:0,yAxisID:'y'
+      });
+    }
+  }
+
   if(charts.qcSpend){charts.qcSpend.destroy()}
   const ctx = document.getElementById('qcSpendChart').getContext('2d');
   charts.qcSpend = new Chart(ctx,{
     type:'bar',data:{
       labels,
-      datasets:[
-        {label:y1Label,data:y1Data,backgroundColor:y1BarColors,borderColor:y1BorderColors,borderWidth:1,order:2,yAxisID:'y'},
-        {label:y2LabelText,data:y2Data,type:'line',borderColor:'#4a9e8e',backgroundColor:'rgba(74,158,142,0.08)',fill:true,tension:0.3,pointRadius:3,order:1,yAxisID:'y1'}
-      ]
+      datasets: qcDatasets
     },
     options:{
       responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},

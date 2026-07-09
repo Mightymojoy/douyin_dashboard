@@ -1,0 +1,205 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - link "ITO · 抖音店铺数据看板" [ref=e3] [cursor=pointer]:
+      - /url: "#"
+      - img [ref=e4]
+      - generic [ref=e6]: ITO · 抖音店铺数据看板
+    - generic [ref=e7]:
+      - generic [ref=e8]:
+        - img [ref=e9]
+        - generic [ref=e12]: 数据更新于 2026-07-07 10:00
+      - generic [ref=e14]: v1.0
+  - generic [ref=e15]:
+    - button "总览" [ref=e16] [cursor=pointer]:
+      - img [ref=e17]
+      - text: 总览
+    - button "店铺维度" [ref=e22] [cursor=pointer]:
+      - img [ref=e23]
+      - text: 店铺维度
+    - button "直播场次" [ref=e27] [cursor=pointer]:
+      - img [ref=e28]
+      - text: 直播场次
+    - button "千川推广" [ref=e34] [cursor=pointer]:
+      - img [ref=e35]
+      - text: 千川推广
+  - generic [ref=e38]:
+    - generic [ref=e39]:
+      - generic [ref=e40]: 店铺
+      - combobox [ref=e41] [cursor=pointer]:
+        - option "全部店铺" [selected]
+        - option "摩登新贵女"
+        - option "轻熟质享客"
+        - option "云端商务家"
+    - generic [ref=e43]:
+      - generic [ref=e44]: 日期
+      - textbox [ref=e45]: 2026-06-01
+      - generic [ref=e46]: 至
+      - textbox [ref=e47]: 2026-07-07
+    - generic [ref=e49]:
+      - button "按日" [ref=e50] [cursor=pointer]
+      - button "按周" [ref=e51] [cursor=pointer]
+      - button "按月" [ref=e52] [cursor=pointer]
+    - button "对比" [ref=e54] [cursor=pointer]:
+      - img [ref=e55]
+      - text: 对比
+    - generic [ref=e60]:
+      - button "平均线" [ref=e61] [cursor=pointer]: 平均线
+      - button "TOP3高亮" [ref=e63] [cursor=pointer]: TOP3高亮
+      - button "明细表" [ref=e65] [cursor=pointer]: 明细表
+  - generic [ref=e67]:
+    - generic [ref=e68]:
+      - generic [ref=e69]:
+        - generic [ref=e70]:
+          - img [ref=e72]
+          - generic [ref=e74]: 总GMV
+          - generic [ref=e75]: ¥3180.6w
+        - generic [ref=e76]:
+          - img [ref=e78]
+          - generic [ref=e80]: 总GSV
+          - generic [ref=e81]: ¥740.3w
+          - generic [ref=e82]: ▲ 49.5%
+        - generic [ref=e83]:
+          - img [ref=e85]
+          - generic [ref=e87]: 25年同期GSV
+          - generic [ref=e88]: ¥495.0w
+        - generic [ref=e89]:
+          - img [ref=e91]
+          - generic [ref=e94]: 总成交人数
+          - generic [ref=e95]: 24,359
+        - generic [ref=e96]:
+          - img [ref=e98]
+          - generic [ref=e101]: 整体退款率
+          - generic [ref=e102]: 76.7%
+        - generic [ref=e103]:
+          - img [ref=e105]
+          - generic [ref=e108]: 综合费比
+          - generic [ref=e109]: 17.10%
+      - text: 对比周期
+      - generic [ref=e110]:
+        - generic [ref=e111] [cursor=pointer]:
+          - generic [ref=e112]: 摩登新贵女
+          - generic [ref=e114]:
+            - generic [ref=e115]:
+              - generic [ref=e116]: GMV
+              - generic [ref=e117]: ¥2141.7w
+            - generic [ref=e118]:
+              - generic [ref=e119]: 退款率
+              - generic [ref=e120]: 78.7%
+            - generic [ref=e121]:
+              - generic [ref=e122]: 成交人数
+              - generic [ref=e123]: 16,164
+            - generic [ref=e124]:
+              - generic [ref=e125]: 店费比
+              - generic [ref=e126]: 11.0%
+        - generic [ref=e127] [cursor=pointer]:
+          - generic [ref=e128]: 轻熟质享客
+          - generic [ref=e130]:
+            - generic [ref=e131]:
+              - generic [ref=e132]: GMV
+              - generic [ref=e133]: ¥621.3w
+            - generic [ref=e134]:
+              - generic [ref=e135]: 退款率
+              - generic [ref=e136]: 63.3%
+            - generic [ref=e137]:
+              - generic [ref=e138]: 成交人数
+              - generic [ref=e139]: 5,640
+            - generic [ref=e140]:
+              - generic [ref=e141]: 店费比
+              - generic [ref=e142]: 26.9%
+        - generic [ref=e143] [cursor=pointer]:
+          - generic [ref=e144]: 云端商务家
+          - generic [ref=e146]:
+            - generic [ref=e147]:
+              - generic [ref=e148]: GMV
+              - generic [ref=e149]: ¥417.6w
+            - generic [ref=e150]:
+              - generic [ref=e151]: 退款率
+              - generic [ref=e152]: 86.8%
+            - generic [ref=e153]:
+              - generic [ref=e154]: 成交人数
+              - generic [ref=e155]: 2,555
+            - generic [ref=e156]:
+              - generic [ref=e157]: 店费比
+              - generic [ref=e158]: 34.6%
+      - generic [ref=e160]:
+        - heading "三店指标趋势" [level=4] [ref=e161]:
+          - img [ref=e162]
+          - text: 三店指标趋势
+        - generic [ref=e165]:
+          - text: "Y1:"
+          - combobox [ref=e166]:
+            - option "GMV" [selected]
+            - option "GSV"
+            - option "成交人数"
+            - option "直播GSV"
+            - option "商城GSV"
+            - option "用户支付GSV"
+          - text: "Y2:"
+          - combobox [ref=e167]:
+            - option "同比变化" [selected]
+            - option "退款率"
+            - option "店费比"
+            - option "GSV达成率"
+            - option "商城退后占比"
+      - generic [ref=e170]:
+        - generic [ref=e171]:
+          - heading "效率概览" [level=4] [ref=e172]:
+            - img [ref=e173]
+            - text: 效率概览
+          - generic [ref=e174]: 三店核心指标对比
+        - table [ref=e176]:
+          - rowgroup [ref=e177]:
+            - row "指标 摩登新贵女 轻熟质享客 云端商务家" [ref=e178]:
+              - columnheader "指标" [ref=e179]
+              - columnheader "摩登新贵女" [ref=e180]
+              - columnheader "轻熟质享客" [ref=e181]
+              - columnheader "云端商务家" [ref=e182]
+          - rowgroup [ref=e183]:
+            - row "GMV ¥2141.7w ¥621.3w ¥417.6w" [ref=e184]:
+              - cell "GMV" [ref=e185]
+              - cell "¥2141.7w" [ref=e186]
+              - cell "¥621.3w" [ref=e187]
+              - cell "¥417.6w" [ref=e188]
+            - row "GSV ¥457.2w ¥227.9w ¥55.2w" [ref=e189]:
+              - cell "GSV" [ref=e190]
+              - cell "¥457.2w" [ref=e191]
+              - cell "¥227.9w" [ref=e192]
+              - cell "¥55.2w" [ref=e193]
+            - row "25年同期GSV ¥410.3w ¥84.8w ¥0" [ref=e194]:
+              - cell "25年同期GSV" [ref=e195]
+              - cell "¥410.3w" [ref=e196]
+              - cell "¥84.8w" [ref=e197]
+              - cell "¥0" [ref=e198]
+            - row "同比变化 ▲ 11.4% ▲ 168.9% ▼ 0.0%" [ref=e199]:
+              - cell "同比变化" [ref=e200]
+              - cell "▲ 11.4%" [ref=e201]:
+                - generic [ref=e202]: ▲ 11.4%
+              - cell "▲ 168.9%" [ref=e203]:
+                - generic [ref=e204]: ▲ 168.9%
+              - cell "▼ 0.0%" [ref=e205]:
+                - generic [ref=e206]: ▼ 0.0%
+            - row "成交人数 16,164 5,640 2,555" [ref=e207]:
+              - cell "成交人数" [ref=e208]
+              - cell "16,164" [ref=e209]
+              - cell "5,640" [ref=e210]
+              - cell "2,555" [ref=e211]
+            - row "退款率 78.7% 63.3% 86.8%" [ref=e212]:
+              - cell "退款率" [ref=e213]
+              - cell "78.7%" [ref=e214]
+              - cell "63.3%" [ref=e215]
+              - cell "86.8%" [ref=e216]
+            - row "店费比 11.0% 26.9% 34.6%" [ref=e217]:
+              - cell "店费比" [ref=e218]
+              - cell "11.0%" [ref=e219]
+              - cell "26.9%" [ref=e220]
+              - cell "34.6%" [ref=e221]
+            - row "客单价 ¥1,324.989 ¥1,101.609 ¥1,634.4" [ref=e222]:
+              - cell "客单价" [ref=e223]
+              - cell "¥1,324.989" [ref=e224]
+              - cell "¥1,101.609" [ref=e225]
+              - cell "¥1,634.4" [ref=e226]
+    - text: 对比周期 对比周期 对比周期
+  - generic [ref=e227]:
+    - generic [ref=e228]: "数据说明: 示例数据仅供演示，实际数据通过 Python 脚本从 Excel 聚合"
+    - generic [ref=e229]: ITO 2026
+    - generic [ref=e230]: v1.0

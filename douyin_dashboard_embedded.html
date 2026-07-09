@@ -172,6 +172,13 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);-webkit-font
 table{width:100%;border-collapse:collapse;font-size:12px}
 th{text-align:left;padding:9px 12px;background:var(--bg);color:var(--text-secondary);font-weight:600;border-bottom:2px solid var(--border);white-space:nowrap;font-size:11px;text-transform:uppercase;letter-spacing:.3px;position:sticky;top:0;z-index:2}
 td{padding:8px 12px;border-bottom:1px solid var(--border);color:var(--text);white-space:nowrap;font-variant-numeric:tabular-nums}
+
+/* Collapsible cards */
+.card.collapsed .card-body{display:none}
+.card .collapse-toggle{width:24px;height:24px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:6px;transition:all .2s;color:var(--text-muted);margin-left:auto;background:none;border:none;flex-shrink:0}
+.card .collapse-toggle:hover{background:var(--bg);color:var(--text)}
+.card .collapse-toggle .chev{transition:transform .2s;display:inline-block}
+.card.collapsed .collapse-toggle .chev{transform:rotate(-90deg)}
 tr:hover td{background:var(--gold-dim)}
 tr:nth-child(even) td{background:rgba(0,0,0,.015)}
 .num{text-align:right;font-feature-settings:"tnum"}
@@ -493,12 +500,13 @@ tr:nth-child(even) td{background:rgba(0,0,0,.015)}
       </div>
       <div class="chart-box"><canvas id="ssScatterChart"></canvas></div>
     </div>
-    <div class="card">
+    <div class="card collapsed">
       <div class="card-header">
         <h4><i data-lucide="crown"></i>主播排名</h4>
         <span class="tag">按总GMV排序</span>
+        <button class="collapse-toggle" onclick="toggleCollapse(this)" title="展开/折叠"><span class="chev">▼</span></button>
       </div>
-      <div class="table-wrap"><table id="ssRankTable"><thead></thead><tbody></tbody></table></div>
+      <div class="card-body"><div class="table-wrap"><table id="ssRankTable"><thead></thead><tbody></tbody></table></div></div>
     </div>
     <div class="card" id="ssTableCard">
       <div class="card-header">
@@ -565,12 +573,13 @@ tr:nth-child(even) td{background:rgba(0,0,0,.015)}
       </div>
       <div class="chart-box"><canvas id="qcRoiChart"></canvas></div>
     </div>
-    <div class="card">
+    <div class="card collapsed">
       <div class="card-header">
         <h4><i data-lucide="target"></i>计划排名</h4>
         <span class="tag">按消耗排序</span>
+        <button class="collapse-toggle" onclick="toggleCollapse(this)" title="展开/折叠"><span class="chev">▼</span></button>
       </div>
-      <div class="table-wrap"><table id="qcRankTable"><thead></thead><tbody></tbody></table></div>
+      <div class="card-body"><div class="table-wrap"><table id="qcRankTable"><thead></thead><tbody></tbody></table></div></div>
     </div>
     <div class="card" id="qcTableCard">
       <div class="card-header">
@@ -2223,6 +2232,14 @@ function renderQcTable(data){
   });
   html+='</tbody></table>';
   document.getElementById('qcTableWrap').innerHTML = html;
+}
+
+// ============================================================
+//  Collapsible cards
+// ============================================================
+function toggleCollapse(btn){
+  const card = btn.closest('.card');
+  if(card) card.classList.toggle('collapsed');
 }
 
 // ============================================================

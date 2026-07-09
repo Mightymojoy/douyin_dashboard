@@ -799,6 +799,7 @@ const KPI_GROUPS = [
   {name:'核心指标',items:[
     {key:'gmv',label:'自营GMV',icon:'dollar-sign',calc:d=>d.reduce((s,r)=>s+r.gmv,0),fmt:v=>moneyFmt(v)},
     {key:'gsv',label:'自营GSV',icon:'bar-chart-3',calc:d=>d.reduce((s,r)=>s+r.gsv,0),fmt:v=>moneyFmt(v)},
+    {key:'avgDailyGsv',label:'日均自营GSV',icon:'bar-chart-3',calc:d=>{const l=d.length;return l?d.reduce((s,r)=>s+r.gsv,0)/l:0},fmt:v=>moneyFmt(Math.round(v))},
     {key:'payGsv',label:'用户支付GSV',icon:'credit-card',calc:d=>d.reduce((s,r)=>s+r.payGsv,0),fmt:v=>moneyFmt(v)},
     {key:'refundAmt',label:'退款金额',icon:'rotate-ccw',calc:d=>d.reduce((s,r)=>s+r.refundAmt,0),fmt:v=>moneyFmt(v)},
     {key:'gsvTarget',label:'GSV目标',icon:'target',calc:d=>d.reduce((s,r)=>s+r.gsvTarget,0),fmt:v=>moneyFmt(v)},
@@ -812,6 +813,7 @@ const KPI_GROUPS = [
   {name:'商城维度',items:[
     {key:'liveGsv',label:'直播GSV',icon:'radio',calc:d=>d.reduce((s,r)=>s+r.liveGsv,0),fmt:v=>moneyFmt(v)},
     {key:'mallGsv',label:'商城GSV',icon:'shopping-cart',calc:d=>d.reduce((s,r)=>s+r.mallGsv,0),fmt:v=>moneyFmt(v)},
+    {key:'avgDailyMallGsv',label:'日均商城GSV',icon:'shopping-cart',calc:d=>{const l=d.length;return l?d.reduce((s,r)=>s+r.mallGsv,0)/l:0},fmt:v=>moneyFmt(Math.round(v))},
     {key:'mallBeforeRatio',label:'商城退前占比',icon:'percent',calc:d=>{const m=d.reduce((s,r)=>s+r.gmv,0);return m?d.reduce((s,r)=>s+(r.mallBeforeRatio||0)*r.gmv,0)/m*100:0},fmt:v=>v.toFixed(1)+'%'},
     {key:'mallAfterRatio',label:'商城退后占比',icon:'percent',calc:d=>{const g=d.reduce((s,r)=>s+r.gsv,0);return g?d.reduce((s,r)=>s+(r.mallAfterRatio||0)*r.gsv,0)/g*100:0},fmt:v=>v.toFixed(1)+'%'},
     {key:'mallRefund',label:'商城退款',icon:'rotate-ccw',calc:d=>d.reduce((s,r)=>s+(r.mallRefund||0),0),fmt:v=>moneyFmt(v)}
@@ -848,6 +850,7 @@ const SS_KPI_GROUPS = [
     {key:'days',label:'直播天数',icon:'radio',calc:d=>d.length,fmt:v=>numFmt(v)},
     {key:'gmv',label:'总GMV',icon:'dollar-sign',calc:d=>d.reduce((s,r)=>s+r.gmv,0),fmt:v=>moneyFmt(v)},
     {key:'gsv',label:'直播GSV',icon:'bar-chart-3',calc:d=>d.reduce((s,r)=>s+r.gsv,0),fmt:v=>moneyFmt(v)},
+    {key:'avgDailyGsv',label:'日均直播GSV',icon:'bar-chart-3',calc:d=>{const l=d.length;return l?d.reduce((s,r)=>s+r.gsv,0)/l:0},fmt:v=>moneyFmt(Math.round(v))},
     {key:'avgGmv',label:'场均GMV',icon:'dollar-sign',calc:d=>{const l=d.length;return l?d.reduce((s,r)=>s+r.gmv,0)/l:0},fmt:v=>moneyFmt(Math.round(v))},
     {key:'durHour',label:'直播时长(h)',icon:'clock',calc:d=>d.reduce((s,r)=>s+(r.durHour||0),0),fmt:v=>numFmt(Math.round(v))}
   ]},
@@ -895,6 +898,7 @@ SS_KPI_GROUPS.forEach(g=>g.items.forEach(i=>{SS_KPI_META[i.key]=i}));
 const QC_KPI_GROUPS = [
   {name:'核心指标',items:[
     {key:'totalSpend',label:'总消耗',icon:'wallet',calc:d=>d.reduce((s,r)=>s+(r.totalSpend||0),0),fmt:v=>moneyFmt(v)},
+    {key:'avgDailySpend',label:'日均消耗',icon:'wallet',calc:d=>{const l=d.length;return l?d.reduce((s,r)=>s+(r.totalSpend||0),0)/l:0},fmt:v=>moneyFmt(Math.round(v))},
     {key:'promoGmv',label:'推广GMV',icon:'dollar-sign',calc:d=>d.reduce((s,r)=>s+(r.promoGmv||0),0),fmt:v=>moneyFmt(v)},
     {key:'promoRoi',label:'综合推广ROI',icon:'trending-up',calc:d=>{const s=d.reduce((s,r)=>s+(r.totalSpend||0),0);const g=d.reduce((s,r)=>s+(r.promoGmv||0),0);return s?+(g/s).toFixed(2):0},fmt:v=>v+'x'},
     {key:'avgPromoRoi',label:'日均推广ROI',icon:'bar-chart-3',calc:d=>d.length?d.reduce((s,r)=>s+(r.promoRoi||0),0)/d.length:0,fmt:v=>v.toFixed(2)+'x'}

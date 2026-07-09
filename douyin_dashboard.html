@@ -311,8 +311,26 @@ tr:nth-child(even) td{background:rgba(0,0,0,.015)}
     <div class="shop-compare-grid" id="ovShopCompare"></div>
     <div class="card">
       <div class="card-header">
-        <h4><i data-lucide="trending-up"></i>三店GMV趋势</h4>
-        <span class="tag">数据范围: 选中日期</span>
+        <h4><i data-lucide="trending-up"></i>三店指标趋势</h4>
+        <div class="actions">
+          <span class="filter-label" style="font-size:10px">Y1:</span>
+          <select id="ovY1Select" style="background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:11px;font-family:var(--font);color:var(--text);outline:none">
+            <option value="gmv">GMV</option>
+            <option value="gsv">GSV</option>
+            <option value="orderBuyers">成交人数</option>
+            <option value="liveGsv">直播GSV</option>
+            <option value="mallGsv">商城GSV</option>
+            <option value="payGsv">用户支付GSV</option>
+          </select>
+          <span class="filter-label" style="font-size:10px">Y2:</span>
+          <select id="ovY2Select" style="background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:11px;font-family:var(--font);color:var(--text);outline:none">
+            <option value="yoy">同比变化</option>
+            <option value="refundRate">退款率</option>
+            <option value="feeRatio">店费比</option>
+            <option value="achieveRate">GSV达成率</option>
+            <option value="mallAfterRatio">商城退后占比</option>
+          </select>
+        </div>
       </div>
       <div class="chart-box"><canvas id="ovTrendChart"></canvas></div>
     </div>
@@ -361,6 +379,9 @@ tr:nth-child(even) td{background:rgba(0,0,0,.015)}
             <option value="expClickRate">曝光点击率</option>
             <option value="clickConvRate">点击转化率</option>
             <option value="expConvRate">曝光转化率</option>
+            <option value="achieveRate">GSV达成率</option>
+            <option value="mallBeforeRatio">商城退前占比</option>
+            <option value="mallAfterRatio">商城退后占比</option>
             <option value="yoy">同比变化</option>
           </select>
         </div>
@@ -429,16 +450,29 @@ tr:nth-child(even) td{background:rgba(0,0,0,.015)}
       <div class="card-header">
         <h4><i data-lucide="radio"></i>场次效率</h4>
         <div class="actions">
+          <span class="filter-label" style="font-size:10px">Y1:</span>
+          <select id="ssY1Select" style="background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:11px;font-family:var(--font);color:var(--text);outline:none">
+            <option value="gmv">GMV</option>
+            <option value="gsv">GSV</option>
+            <option value="uv">UV</option>
+            <option value="dealBuyers">成交人数</option>
+            <option value="durMin">时长(分)</option>
+            <option value="durHour">时长(时)</option>
+            <option value="refund">退款金额</option>
+          </select>
           <span class="filter-label" style="font-size:10px">Y2:</span>
           <select id="ssY2Select" style="background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:11px;font-family:var(--font);color:var(--text);outline:none">
             <option value="refundRate">退款率</option>
-            <option value="gpm">GPM</option>
-            <option value="gsvPerHour">时均GSV</option>
-            <option value="uvPerHour">时均UV</option>
-            <option value="avgViewSec">人均观看s</option>
             <option value="expViewRate">曝光观看率</option>
-            <option value="viewDealRate">观看成交率</option>
+            <option value="viewProdExposeRate">观看-商品曝光率</option>
             <option value="prodExpClickRate">商品曝光点击率</option>
+            <option value="prodClickDealRate">商品点击成交率</option>
+            <option value="liveExpDealRate">曝光成交率</option>
+            <option value="viewDealRate">观看成交率</option>
+            <option value="expInteractRate">曝光互动率</option>
+            <option value="viewInteractRate">观看互动率</option>
+            <option value="followRate">转粉率</option>
+            <option value="yoy">同比变化</option>
           </select>
         </div>
       </div>
@@ -485,7 +519,32 @@ tr:nth-child(even) td{background:rgba(0,0,0,.015)}
     <div class="card">
       <div class="card-header">
         <h4><i data-lucide="bar-chart-3"></i>消耗趋势</h4>
-        <span class="tag">日消耗 / 支付ROI</span>
+        <div class="actions">
+          <span class="filter-label" style="font-size:10px">Y1:</span>
+          <select id="qcY1Select" style="background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:11px;font-family:var(--font);color:var(--text);outline:none">
+            <option value="totalSpend">总消耗</option>
+            <option value="promoGmv">推广GMV</option>
+            <option value="liveSpend">直播花费</option>
+            <option value="livePromoGmv">直播推广GMV</option>
+            <option value="directSpend">直投花费</option>
+            <option value="directGmv">直投GMV</option>
+            <option value="materialSpend">素材花费</option>
+            <option value="materialGmv">素材GMV</option>
+            <option value="mallSpend">商城花费</option>
+            <option value="mallPromoGmv">商城推广GMV</option>
+            <option value="nonGrantSpend">非赠款花费</option>
+          </select>
+          <span class="filter-label" style="font-size:10px">Y2:</span>
+          <select id="qcY2Select" style="background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:11px;font-family:var(--font);color:var(--text);outline:none">
+            <option value="promoRoi">推广ROI</option>
+            <option value="livePromoRoi">直播推广ROI</option>
+            <option value="directRoi">直投ROI</option>
+            <option value="materialRoi">素材ROI</option>
+            <option value="mallPromoRoi">商城推广ROI</option>
+            <option value="nonGrantFeeRatio">非赠款费比</option>
+            <option value="yoy">同比变化</option>
+          </select>
+        </div>
       </div>
       <div class="chart-box"><canvas id="qcSpendChart"></canvas></div>
     </div>
@@ -617,6 +676,76 @@ const state = {
 };
 // charts
 let charts={};
+
+// ============================================================
+//  3.1 COMMON CHART HELPERS (对比 / 平均线 / TOP3 高亮)
+// ============================================================
+
+// 按索引位置计算同比变化率：((当期 - 对比期) / 对比期 * 100)
+function getPeriodChange(mainData, compareData, key, isPct){
+  if(!compareData || !compareData.length) return mainData.map(()=>null);
+  return mainData.map((d,i)=>{
+    const c = compareData[i];
+    const cur = isPct ? (d[key]||0)*100 : (d[key]||0);
+    const prev = c ? (isPct ? (c[key]||0)*100 : (c[key]||0)) : 0;
+    return prev ? +((cur-prev)/prev*100).toFixed(2) : null;
+  });
+}
+
+// 返回数组中 top3 位置的布尔数组
+function getTop3Indices(arr){
+  const idxs = arr.map((v,i)=>({v,i})).filter(x=>x.v>0).sort((a,b)=>b.v-a.v).slice(0,3).map(x=>x.i);
+  const set = new Set(idxs);
+  return arr.map((_,i)=>set.has(i));
+}
+
+// Chart.js 自定义插件：绘制平均线
+const avgLinePlugin = {
+  id:'avgLinePlugin',
+  afterDraw(chart, args, options){
+    if(!options.enabled || options.value===null || options.value===undefined || isNaN(options.value)) return;
+    const {ctx, chartArea, scales} = chart;
+    const y = scales[options.scaleID||'y'];
+    if(!y) return;
+    const yPos = y.getPixelForValue(options.value);
+    if(yPos < chartArea.top || yPos > chartArea.bottom) return;
+    ctx.save();
+    ctx.beginPath();
+    ctx.strokeStyle = options.color || 'rgba(37,99,235,0.5)';
+    ctx.lineWidth = options.lineWidth || 1;
+    ctx.setLineDash(options.dash || [5,5]);
+    ctx.moveTo(chartArea.left, yPos);
+    ctx.lineTo(chartArea.right, yPos);
+    ctx.stroke();
+    if(options.label){
+      ctx.fillStyle = options.color || 'rgba(37,99,235,0.7)';
+      ctx.font = options.font || '10px Inter';
+      ctx.textAlign = 'left';
+      ctx.fillText(options.label, chartArea.left + 4, yPos - 6);
+    }
+    ctx.restore();
+  }
+};
+if(typeof Chart!=='undefined') Chart.register(avgLinePlugin);
+
+// 获取对比周期数据（供四个 tab 主趋势图使用）
+function getCompareData(type, shopKey){
+  const {cStart, cEnd, gran, shopFilter} = state;
+  if(type==='shop'){
+    return aggregateShopData(filterByDate(SHOP_DATA[shopKey], cStart, cEnd), gran);
+  }
+  if(type==='session'){
+    let data = SESSION_DATA;
+    if(shopFilter!=='all') data = data.filter(d=>d.shop===shopFilter);
+    return aggregateSessionData(filterByDate(data, cStart, cEnd, 'date'), gran);
+  }
+  if(type==='qianchuan'){
+    let data = QC_DATA;
+    if(shopFilter!=='all') data = data.filter(d=>d.shop===shopFilter);
+    return aggregateQcData(filterByDate(data, cStart, cEnd, 'date'), gran);
+  }
+  return [];
+}
 
 // ============================================================
 //  3.5 KPI META
@@ -809,7 +938,12 @@ document.getElementById('toggleTable').addEventListener('click',function(){this.
 document.getElementById('shopY1Select').addEventListener('change',()=>renderShopTab());
 document.getElementById('shopY2Select').addEventListener('change',()=>renderShopTab());
 document.getElementById('channelMallRatioGran').addEventListener('change',()=>renderShopTab());
+document.getElementById('ovY1Select').addEventListener('change',()=>renderOverviewTab());
+document.getElementById('ovY2Select').addEventListener('change',()=>renderOverviewTab());
+document.getElementById('ssY1Select').addEventListener('change',()=>renderSessionTab());
 document.getElementById('ssY2Select').addEventListener('change',()=>renderSessionTab());
+document.getElementById('qcY1Select').addEventListener('change',()=>renderQianchuanTab());
+document.getElementById('qcY2Select').addEventListener('change',()=>renderQianchuanTab());
 
 // ============================================================
 //  6. RENDER DISPATCH
@@ -1004,22 +1138,95 @@ function renderOvShopCompare(data){
 
 function renderOvChart(data){
   const shops = Object.keys(data);
-  const labels = shops.length?data[shops[0]].map(d=>d.date):[];
-  const datasets = shops.map(k=>({
-    label:SHOP_NAMES[k],data:data[k].map(d=>d.gmv),
-    borderColor:SHOP_COLORS[k],backgroundColor:SHOP_COLORS[k]+'20',
-    fill:false,tension:0.3,pointRadius:3,pointHoverRadius:5
-  }));
+  if(!shops.length){document.getElementById('ovTrendChart').parentElement.innerHTML='<div class="empty-state"><p>暂无数据</p></div>';return;}
+
+  const y1Key = document.getElementById('ovY1Select').value;
+  const y2Key = document.getElementById('ovY2Select').value;
+  const labels = data[shops[0]].map(d=>d.date);
+
+  // Y1 三店折线 + TOP3 高亮
+  const y1Datasets = shops.map(k=>{
+    const vals = data[k].map(d=>d[y1Key]||0);
+    const top3 = state.showTop3 ? getTop3Indices(vals) : vals.map(()=>false);
+    const color = SHOP_COLORS[k];
+    return {
+      label:SHOP_NAMES[k],
+      data:vals,
+      borderColor:color,
+      backgroundColor:color+'20',
+      fill:false,tension:0.3,
+      pointRadius:top3.map(h=>h?6:3),
+      pointBackgroundColor:top3.map(h=>h?'#c9a962':color),
+      pointBorderColor:top3.map(h=>h?'#c9a962':color),
+      pointHoverRadius:6
+    };
+  });
+
+  // 平均线：所有店铺所有点的均值
+  const allY1 = shops.flatMap(k=>data[k].map(d=>d[y1Key]||0));
+  const avgY1 = allY1.length ? allY1.reduce((s,v)=>s+v,0)/allY1.length : 0;
+
+  let datasets = [...y1Datasets];
+  let y2Scale = null;
+  let y2IsPct = false;
+
+  if(y2Key && y2Key!=='none'){
+    const pctKeys = ['refundRate','feeRatio','achieveRate','mallAfterRatio'];
+    y2IsPct = pctKeys.includes(y2Key) || y2Key==='yoy';
+    let y2Data = [];
+    let y2LabelText = '';
+
+    if(y2Key==='yoy'){
+      const mainSum = labels.map((_,i)=>shops.reduce((s,k)=>s+(data[k][i][y1Key]||0),0));
+      let compareSum = [];
+      if(state.compareOn){
+        const cData = {};
+        shops.forEach(k=>{ cData[k] = getCompareData('shop',k); });
+        compareSum = labels.map((_,i)=>shops.reduce((s,k)=>s+((cData[k]&&cData[k][i])?cData[k][i][y1Key]||0:0),0));
+      } else if(y1Key==='gsv'){
+        compareSum = labels.map((_,i)=>shops.reduce((s,k)=>s+(data[k][i].prevYearGsv||0),0));
+      }
+      y2Data = mainSum.map((v,i)=>compareSum[i]?+((v-compareSum[i])/compareSum[i]*100).toFixed(2):null);
+      y2LabelText = '同比变化';
+    } else {
+      y2Data = labels.map((_,i)=>{
+        const vals = shops.map(k=>data[k][i][y2Key]||0);
+        const avg = vals.reduce((s,v)=>s+v,0)/vals.length;
+        return +(avg*(pctKeys.includes(y2Key)?100:1)).toFixed(2);
+      });
+      y2LabelText = {refundRate:'退款率',feeRatio:'店费比',achieveRate:'GSV达成率',mallAfterRatio:'商城退后占比'}[y2Key]||y2Key;
+    }
+
+    datasets.push({
+      label:y2LabelText,
+      data:y2Data,
+      type:'line',
+      borderColor:'#e07b4a',
+      backgroundColor:'rgba(224,123,74,0.08)',
+      fill:true,tension:0.3,pointRadius:3,
+      yAxisID:'y1'
+    });
+
+    y2Scale = {
+      beginAtZero:true,position:'right',grid:{display:false},
+      ticks:{font:{size:10,family:'Inter'},callback:v=>y2IsPct?v+'%':v}
+    };
+  }
+
   if(charts.ovTrend){charts.ovTrend.destroy()}
   const ctx = document.getElementById('ovTrendChart').getContext('2d');
   charts.ovTrend = new Chart(ctx,{
     type:'line',data:{labels,datasets},
     options:{
       responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
-      plugins:{legend:{position:'top',labels:{usePointStyle:true,boxWidth:8,font:{size:11,family:'Inter'}}}},
+      plugins:{
+        legend:{position:'top',labels:{usePointStyle:true,boxWidth:8,font:{size:11,family:'Inter'}}},
+        avgLinePlugin:{enabled:state.showAvgLine,value:avgY1,scaleID:'y',color:'rgba(37,99,235,0.5)',label:'μ 均值'}
+      },
       scales:{
         x:{grid:{display:false},ticks:{font:{size:10,family:'Inter'},maxTicksLimit:15}},
-        y:{beginAtZero:true,grid:{color:'#f0f0f0'},ticks:{font:{size:10,family:'Inter'},callback:v=>moneyFmt(v)}}
+        y:{beginAtZero:true,position:'left',grid:{color:'#f0f0f0'},ticks:{font:{size:10,family:'Inter'},callback:v=>moneyFmt(v)}},
+        ...(y2Scale?{y1:y2Scale}:{})
       }
     }
   });
@@ -1295,36 +1502,53 @@ function renderShopChart(data,k){
   const y2Key = document.getElementById('shopY2Select').value;
   const labels = data.map(d=>d.date);
   const y1Data = data.map(d=>d[y1Key]||0);
-  // 百分比类指标（存储为小数）*100显示
+
   const pctKeys = ['refundRate','feeRatio','expClickRate','clickConvRate','expConvRate','mallBeforeRatio','mallAfterRatio','achieveRate'];
-  const y2Data = data.map(d=>pctKeys.includes(y2Key)?(d[y2Key]||0)*100:d[y2Key]||0);
+  const y2IsPct = pctKeys.includes(y2Key) || y2Key==='yoy';
+
+  // TOP3 高亮 + 平均线
+  const top3 = state.showTop3 ? getTop3Indices(y1Data) : y1Data.map(()=>false);
+  const y1BarColors = top3.map(h=>h?'#b08d4b':'rgba(201,169,98,0.6)');
+  const y1BorderColors = top3.map(h=>h?'#c9a962':'#c9a962');
+  const avgY1 = y1Data.length ? y1Data.reduce((s,v)=>s+v,0)/y1Data.length : 0;
+
+  // Y2 数据
+  let y2Data, y2LabelText;
+  if(y2Key==='yoy'){
+    if(state.compareOn){
+      const compareData = getCompareData('shop',k);
+      y2Data = getPeriodChange(data, compareData, 'gsv', false);
+    } else {
+      y2Data = data.map(d=>d.prevYearGsv?+((d.gsv-d.prevYearGsv)/d.prevYearGsv*100).toFixed(2):null);
+    }
+    y2LabelText = '同比变化';
+  } else {
+    y2Data = data.map(d=>pctKeys.includes(y2Key)?(d[y2Key]||0)*100:d[y2Key]||0);
+    y2LabelText = {refundRate:'退款率',feeRatio:'店费比',expClickRate:'曝光点击率',clickConvRate:'点击转化率',expConvRate:'曝光转化率',achieveRate:'GSV达成率',mallBeforeRatio:'商城退前占比',mallAfterRatio:'商城退后占比'}[y2Key]||y2Key;
+  }
+
+  const y1Label = {gmv:'GMV',gsv:'GSV',orderBuyers:'成交人数',liveGsv:'直播GSV',mallGsv:'商城GSV',payGsv:'用户支付GSV',prevYearGsv:'25年同期GSV'}[y1Key]||y1Key;
+
   if(charts.shop){charts.shop.destroy()}
   const ctx = document.getElementById('shopChart').getContext('2d');
-  const y2Label = {refundRate:'退款率',feeRatio:'店费比',expClickRate:'曝光点击率',clickConvRate:'点击转化率',expConvRate:'曝光转化率',yoy:'同比变化',mallBeforeRatio:'商城退前占比',mallAfterRatio:'商城退后占比'}[y2Key]||y2Key;
-  const y1Label = {gmv:'GMV',gsv:'GSV',orderBuyers:'成交人数',liveGsv:'直播GSV',mallGsv:'商城GSV',payGsv:'用户支付GSV',prevYearGsv:'25年同期GSV'}[y1Key]||y1Key;
   charts.shop = new Chart(ctx,{
     type:'bar',data:{
       labels,
       datasets:[
-        {label:y1Label,data:y1Data,backgroundColor:'rgba(201,169,98,0.6)',borderColor:'#c9a962',borderWidth:1,order:2,yAxisID:'y'},
-        {label:y2Label,data:y2Data,type:'line',borderColor:'#e07b4a',backgroundColor:'rgba(224,123,74,0.08)',fill:true,tension:0.3,pointRadius:3,order:1,yAxisID:'y1'}
+        {label:y1Label,data:y1Data,backgroundColor:y1BarColors,borderColor:y1BorderColors,borderWidth:1,order:2,yAxisID:'y'},
+        {label:y2LabelText,data:y2Data,type:'line',borderColor:'#e07b4a',backgroundColor:'rgba(224,123,74,0.08)',fill:true,tension:0.3,pointRadius:3,order:1,yAxisID:'y1'}
       ]
     },
     options:{
       responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
       plugins:{
         legend:{position:'top',labels:{usePointStyle:true,boxWidth:8,font:{size:11,family:'Inter'}}},
-        annotation: state.showAvgLine?{
-          annotations:{
-            avgLine:{type:'line',yMin:null,yMax:null,borderColor:'rgba(37,99,235,0.5)',borderWidth:1,borderDash:[5,5],
-              scaleID:'y',value:y1Data.reduce((s,v)=>s+v,0)/y1Data.length,label:{display:true,content:'μ 均值',font:{size:10}}}
-          }
-        }:{}
+        avgLinePlugin:{enabled:state.showAvgLine,value:avgY1,scaleID:'y',color:'rgba(37,99,235,0.5)',label:'μ 均值'}
       },
       scales:{
         x:{grid:{display:false},ticks:{font:{size:10,family:'Inter'},maxTicksLimit:15}},
         y:{beginAtZero:true,position:'left',grid:{color:'#f0f0f0'},ticks:{font:{size:10,family:'Inter'},callback:v=>moneyFmt(v)}},
-        y1:{beginAtZero:true,position:'right',grid:{display:false},ticks:{font:{size:10,family:'Inter'},callback:v=>pctKeys.includes(y2Key)?v+'%':(y2Key==='yoy'?v+'%':v)}}
+        y1:{beginAtZero:true,position:'right',grid:{display:false},ticks:{font:{size:10,family:'Inter'},callback:v=>y2IsPct?v+'%':v}}
       }
     }
   });
@@ -1509,27 +1733,48 @@ function renderSsKpi(data){
 function renderSsChart(data){
   if(!data.length){document.getElementById('ssChart').parentElement.innerHTML='<div class="empty-state"><p>暂无场次数据</p></div>';return;}
   const sorted = [...data].sort((a,b)=>a.date.localeCompare(b.date));
+  const y1Key = document.getElementById('ssY1Select').value;
   const y2Key = document.getElementById('ssY2Select').value;
-  const isPct = ['refundRate','expViewRate','viewDealRate','prodExpClickRate','viewProdExposeRate','liveExpDealRate','expInteractRate','viewInteractRate','followRate'].includes(y2Key);
+  const pctKeys = ['refundRate','expViewRate','viewProdExposeRate','prodExpClickRate','prodClickDealRate','liveExpDealRate','viewDealRate','expInteractRate','viewInteractRate','followRate'];
+  const isPct = pctKeys.includes(y2Key) || y2Key==='yoy';
   const labels = sorted.map(d=>d.date);
-  const gmvData = sorted.map(d=>d.gmv);
-  const y2Data = sorted.map(d=>isPct?(d[y2Key]||0)*100:d[y2Key]);
+  const y1Data = sorted.map(d=>d[y1Key]||0);
+
+  // TOP3 高亮 + 平均线
+  const top3 = state.showTop3 ? getTop3Indices(y1Data) : y1Data.map(()=>false);
+  const y1BarColors = top3.map(h=>h?'#b08d4b':'rgba(201,169,98,0.6)');
+  const y1BorderColors = top3.map(h=>h?'#c9a962':'#c9a962');
+  const avgY1 = y1Data.length ? y1Data.reduce((s,v)=>s+v,0)/y1Data.length : 0;
+
+  // Y2 数据
+  let y2Data, y2LabelText;
+  if(y2Key==='yoy'){
+    const compareData = state.compareOn ? getCompareData('session') : [];
+    y2Data = getPeriodChange(sorted, compareData, y1Key, false);
+    y2LabelText = '同比变化';
+  } else {
+    y2Data = sorted.map(d=>isPct?(d[y2Key]||0)*100:d[y2Key]);
+    y2LabelText = {refundRate:'退款率',expViewRate:'曝光观看率',viewProdExposeRate:'观看-商品曝光率',prodExpClickRate:'商品曝光点击率',prodClickDealRate:'商品点击成交率',liveExpDealRate:'曝光成交率',viewDealRate:'观看成交率',expInteractRate:'曝光互动率',viewInteractRate:'观看互动率',followRate:'转粉率'}[y2Key]||'指标';
+  }
+
+  const y1Labels = {gmv:'GMV',gsv:'GSV',uv:'UV',dealBuyers:'成交人数',durMin:'时长(分)',durHour:'时长(时)',refund:'退款金额'};
+  const y1Label = y1Labels[y1Key]||'指标';
+
   if(charts.ss){charts.ss.destroy()}
   const ctx = document.getElementById('ssChart').getContext('2d');
-  const y2Labels = {refundRate:'退款率',gpm:'GPM',gsvPerHour:'时均GSV',uvPerHour:'时均UV',avgViewSec:'人均观看s',expViewRate:'曝光观看率',viewDealRate:'观看成交率',prodExpClickRate:'商品曝光点击率'};
-  const y2Label = y2Labels[y2Key]||'指标';
   charts.ss = new Chart(ctx,{
     type:'bar',data:{
       labels,
       datasets:[
-        {label:'GMV',data:gmvData,backgroundColor:'rgba(201,169,98,0.6)',borderColor:'#c9a962',borderWidth:1,order:2,yAxisID:'y'},
-        {label:y2Label,data:y2Data,type:'line',borderColor:'#4a9e8e',backgroundColor:'rgba(74,158,142,0.08)',fill:true,tension:0.3,pointRadius:3,order:1,yAxisID:'y1'}
+        {label:y1Label,data:y1Data,backgroundColor:y1BarColors,borderColor:y1BorderColors,borderWidth:1,order:2,yAxisID:'y'},
+        {label:y2LabelText,data:y2Data,type:'line',borderColor:'#4a9e8e',backgroundColor:'rgba(74,158,142,0.08)',fill:true,tension:0.3,pointRadius:3,order:1,yAxisID:'y1'}
       ]
     },
     options:{
       responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
       plugins:{
-        legend:{position:'top',labels:{usePointStyle:true,boxWidth:8,font:{size:11,family:'Inter'}}}
+        legend:{position:'top',labels:{usePointStyle:true,boxWidth:8,font:{size:11,family:'Inter'}}},
+        avgLinePlugin:{enabled:state.showAvgLine,value:avgY1,scaleID:'y',color:'rgba(37,99,235,0.5)',label:'μ 均值'}
       },
       scales:{
         x:{grid:{display:false},ticks:{font:{size:9,family:'Inter'},maxTicksLimit:20}},
@@ -1642,29 +1887,61 @@ function renderQcKpi(data){
 
 function renderQcSpendChart(data){
   if(!data.length){document.getElementById('qcSpendChart').parentElement.innerHTML='<div class="empty-state"><p>暂无推广数据</p></div>';return;}
+  const y1Key = document.getElementById('qcY1Select').value;
+  const y2Key = document.getElementById('qcY2Select').value;
+  const roiKeys = ['promoRoi','livePromoRoi','directRoi','materialRoi','mallPromoRoi'];
+  const pctKeys = ['nonGrantFeeRatio'];
+  const isPct = pctKeys.includes(y2Key) || y2Key==='yoy';
+
+  // 按日期聚合 Y1
   const map={};
-  data.forEach(d=>{if(!map[d.date]) map[d.date]={totalSpend:0,promoGmv:0};map[d.date].totalSpend+=d.totalSpend||0;map[d.date].promoGmv+=d.promoGmv||0});
+  data.forEach(d=>{if(!map[d.date]) map[d.date]={}; map[d.date][y1Key]=(map[d.date][y1Key]||0)+(d[y1Key]||0);});
   const sorted = Object.keys(map).sort();
   const labels = sorted;
-  const spendData = sorted.map(k=>map[k].totalSpend);
-  const roiData = sorted.map(k=>map[k].totalSpend?+(map[k].promoGmv/map[k].totalSpend).toFixed(2):0);
+  const y1Data = sorted.map(k=>map[k][y1Key]||0);
+
+  // TOP3 高亮 + 平均线
+  const top3 = state.showTop3 ? getTop3Indices(y1Data) : y1Data.map(()=>false);
+  const y1BarColors = top3.map(h=>h?'#b08d4b':'rgba(201,169,98,0.6)');
+  const y1BorderColors = top3.map(h=>h?'#c9a962':'#c9a962');
+  const avgY1 = y1Data.length ? y1Data.reduce((s,v)=>s+v,0)/y1Data.length : 0;
+
+  // Y2 数据
+  let y2Data = [], y2LabelText = '';
+  if(y2Key==='yoy'){
+    const compareData = state.compareOn ? getCompareData('qianchuan') : [];
+    y2Data = getPeriodChange(sorted.map(k=>({date:k,[y1Key]:map[k][y1Key]})), compareData, y1Key, false);
+    y2LabelText = '同比变化';
+  } else {
+    const y2Map={};
+    data.forEach(d=>{if(!y2Map[d.date]) y2Map[d.date]={sum:0,count:0}; y2Map[d.date].sum+=(d[y2Key]||0); y2Map[d.date].count++;});
+    y2Data = sorted.map(k=>y2Map[k]?+(y2Map[k].sum/y2Map[k].count*(pctKeys.includes(y2Key)?100:1)).toFixed(2):0);
+    y2LabelText = {promoRoi:'推广ROI',livePromoRoi:'直播推广ROI',directRoi:'直投ROI',materialRoi:'素材ROI',mallPromoRoi:'商城推广ROI',nonGrantFeeRatio:'非赠款费比'}[y2Key]||y2Key;
+  }
+
+  const y1Labels = {totalSpend:'总消耗',promoGmv:'推广GMV',liveSpend:'直播花费',livePromoGmv:'直播推广GMV',directSpend:'直投花费',directGmv:'直投GMV',materialSpend:'素材花费',materialGmv:'素材GMV',mallSpend:'商城花费',mallPromoGmv:'商城推广GMV',nonGrantSpend:'非赠款花费'};
+  const y1Label = y1Labels[y1Key]||y1Key;
+
   if(charts.qcSpend){charts.qcSpend.destroy()}
   const ctx = document.getElementById('qcSpendChart').getContext('2d');
   charts.qcSpend = new Chart(ctx,{
     type:'bar',data:{
       labels,
       datasets:[
-        {label:'消耗',data:spendData,backgroundColor:'rgba(201,169,98,0.6)',borderColor:'#c9a962',borderWidth:1,order:2,yAxisID:'y'},
-        {label:'推广ROI',data:roiData,type:'line',borderColor:'#4a9e8e',backgroundColor:'rgba(74,158,142,0.08)',fill:true,tension:0.3,pointRadius:3,order:1,yAxisID:'y1'}
+        {label:y1Label,data:y1Data,backgroundColor:y1BarColors,borderColor:y1BorderColors,borderWidth:1,order:2,yAxisID:'y'},
+        {label:y2LabelText,data:y2Data,type:'line',borderColor:'#4a9e8e',backgroundColor:'rgba(74,158,142,0.08)',fill:true,tension:0.3,pointRadius:3,order:1,yAxisID:'y1'}
       ]
     },
     options:{
       responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
-      plugins:{legend:{position:'top',labels:{usePointStyle:true,boxWidth:8,font:{size:11,family:'Inter'}}}},
+      plugins:{
+        legend:{position:'top',labels:{usePointStyle:true,boxWidth:8,font:{size:11,family:'Inter'}}},
+        avgLinePlugin:{enabled:state.showAvgLine,value:avgY1,scaleID:'y',color:'rgba(37,99,235,0.5)',label:'μ 均值'}
+      },
       scales:{
         x:{grid:{display:false},ticks:{font:{size:10,family:'Inter'},maxTicksLimit:15}},
         y:{beginAtZero:true,grid:{color:'#f0f0f0'},ticks:{font:{size:10,family:'Inter'},callback:v=>moneyFmt(v)}},
-        y1:{beginAtZero:true,position:'right',grid:{display:false},ticks:{font:{size:10,family:'Inter'},callback:v=>v+'x'}}
+        y1:{beginAtZero:true,position:'right',grid:{display:false},ticks:{font:{size:10,family:'Inter'},callback:v=>isPct?v+'%':(roiKeys.includes(y2Key)?v+'x':v)}}
       }
     }
   });

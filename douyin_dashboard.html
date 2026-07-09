@@ -102,6 +102,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);-webkit-font
 .kpi-change.up{background:var(--success-bg);color:var(--success)}
 .kpi-change.down{background:var(--danger-bg);color:var(--danger)}
 .kpi-change.neutral{background:var(--warning-bg);color:var(--warning)}
+.kpi-card .kpi-delta{font-size:11px;font-weight:600;margin-top:4px;display:inline-flex;align-items:center;gap:3px;padding:1px 8px;border-radius:10px}
+.kpi-delta.pct-green{background:var(--success-bg);color:var(--success)}
+.kpi-delta.pct-red{background:var(--danger-bg);color:var(--danger)}
 
 /* ========== KPI Selector ========== */
 .kpi-selector{margin-bottom:10px;position:relative}
@@ -761,7 +764,16 @@ function alignByDate(mainLabels, compareData, key){
 }
 
 // 渲染对比周期 KPI 行（各 tab 调用）
-function renderCompareKpiRow(elId, compareData, items){
+function calcKpiChange(mainVal, compareVal){
+  if(compareVal===undefined || compareVal===null || compareVal===0 || isNaN(compareVal)) return null;
+  const pct = (mainVal - compareVal) / compareVal * 100;
+  if(!isFinite(pct)) return null;
+  const cls = pct > 0 ? 'pct-green' : 'pct-red';
+  const arr = pct > 0 ? '▲' : '▼';
+  return { pct, cls, arr, text: `${arr} ${Math.abs(pct).toFixed(1)}%` };
+}
+
+function renderCompareKpiRow(elId, mainData, compareData, items){
   const el = document.getElementById(elId);
   if(!state.compareOn || !compareData || !compareData.length){
     el.style.display='none'; return;
@@ -769,9 +781,12 @@ function renderCompareKpiRow(elId, compareData, items){
   el.style.display='grid';
   let html = '';
   items.forEach(item=>{
-    const val = item.calc(compareData);
+    const compareVal = item.calc(compareData);
+    const mainVal = item.calc(mainData);
+    const delta = item.skipDelta ? null : calcKpiChange(mainVal, compareVal);
+    const deltaHtml = delta ? `<div class="kpi-delta ${delta.cls}">${delta.text}</div>` : '';
     html += `<div class="kpi-card"><div class="kpi-icon"><i data-lucide="${item.icon}"></i></div>
-      <div class="kpi-label">${item.label}</div><div class="kpi-value">${item.fmt(val)}</div></div>`;
+      <div class="kpi-label">${item.label}</div><div class="kpi-value">${item.fmt(compareVal)}</div>${deltaHtml}</div>`;
   });
   el.innerHTML = html;
   setTimeout(()=>{try{lucide.createIcons()}catch(e){}},50);
@@ -999,14 +1014,23 @@ function renderOverviewTab(){
   if(state.compareOn){
     const cData = getFilteredShopDataWithRange('all', state.cStart, state.cEnd);
     if(state.gran!=='day') Object.keys(cData).forEach(s=>{ cData[s]=aggregateShopData(cData[s],state.gran); });
-    const cTotal = {gmv:0,gsv:0,orderBuyers:0,gmvR:0,gsvR:0,prevYearGsv:0,feeSum:0,couponSum:0};
+    const cTotal = {gmv:0,gsv:0,orderBuyers:0,gmvR:0,gsvR:0,prevYearGsv:0,feeSum:0,couponSum:0,nonGrantSpend:0};
     Object.values(cData).forEach(arr=>{arr.forEach(d=>{cTotal.gmv+=d.gmv;cTotal.gsv+=d.gsv;cTotal.orderBuyers+=d.orderBuyers||0;cTotal.gmvR+=d.gmv;cTotal.gsvR+=d.gsv;cTotal.prevYearGsv+=d.prevYearGsv||0;cTotal.feeSum+=(d.feeRatio||0)*d.gsv;cTotal.couponSum+=d.coupon||0;})});
+    cTotal.nonGrantSpend = cNonGrant;
     // 对比千川总消耗
     let cNonGrant = 0;
     QC_DATA.filter(d=>d.date>=state.cStart&&d.date<=state.cEnd).forEach(d=>{
       if(state.shopFilter==='all'||d.shop===state.shopFilter) cNonGrant+=d.nonGrantSpend||0;
     });
-    renderCompareKpiRow('ovCompareRow', [cTotal], [
+    // 主周期汇总（用于计算同环比）
+    const mTotal = {gmv:0,gsv:0,orderBuyers:0,gmvR:0,gsvR:0,prevYearGsv:0,feeSum:0,couponSum:0,nonGrantSpend:0};
+    Object.values(data).forEach(arr=>{arr.forEach(d=>{mTotal.gmv+=d.gmv;mTotal.gsv+=d.gsv;mTotal.orderBuyers+=d.orderBuyers||0;mTotal.gmvR+=d.gmv;mTotal.gsvR+=d.gsv;mTotal.prevYearGsv+=d.prevYearGsv||0;mTotal.feeSum+=(d.feeRatio||0)*d.gsv;mTotal.couponSum+=d.coupon||0;})});
+    mTotal.nonGrantSpend = mNonGrant;
+    let mNonGrant = 0;
+    QC_DATA.filter(d=>d.date>=state.start&&d.date<=state.end).forEach(d=>{
+      if(state.shopFilter==='all'||d.shop===state.shopFilter) mNonGrant+=d.nonGrantSpend||0;
+    });
+    renderCompareKpiRow('ovCompareRow', [mTotal], [cTotal], [
       {label:'对比总GMV',icon:'dollar-sign',calc:d=>d.reduce((s,r)=>s+r.gmv,0),fmt:v=>moneyFmt(v)},
       {label:'对比总GSV',icon:'bar-chart-3',calc:d=>d.reduce((s,r)=>s+r.gsv,0),fmt:v=>moneyFmt(v)},
       {label:'对比成交人数',icon:'users',calc:d=>d.reduce((s,r)=>s+(r.orderBuyers||0),0),fmt:v=>numFmt(v)},
@@ -1014,7 +1038,7 @@ function renderOverviewTab(){
       {label:'对比费比',icon:'percent',calc:d=>{const f=d.reduce((s,r)=>s+r.feeSum,0);const g=d.reduce((s,r)=>s+r.gsv,0);return g?+(f/g*100).toFixed(1):0},fmt:v=>pctFmt(v)},
       {label:'对比客单价',icon:'tag',calc:d=>{const g=d.reduce((s,r)=>s+r.gmv,0);const b=d.reduce((s,r)=>s+(r.orderBuyers||0),0);return b?Math.round(g/b):0},fmt:v=>'¥'+numFmt(v)},
       {label:'对比优惠券',icon:'credit-card',calc:d=>d.reduce((s,r)=>s+r.couponSum,0),fmt:v=>moneyFmt(v)},
-      {label:'对比总消耗',icon:'wallet',calc:()=>cNonGrant,fmt:v=>moneyFmt(v)}
+      {label:'对比总消耗',icon:'wallet',calc:d=>d.reduce((s,r)=>s+(r.nonGrantSpend||0),0),fmt:v=>moneyFmt(v)}
     ]);
   } else {
     document.getElementById('ovCompareRow').style.display='none';
@@ -1373,9 +1397,9 @@ function renderShopTab(){
     const compareItems = state.shopKpiSelected.map(key=>{
       const m = KPI_META[key];
       if(!m) return null;
-      return {label:'对比'+m.label, icon:m.icon, calc:m.calc, fmt:m.fmt};
+      return {label:'对比'+m.label, icon:m.icon, calc:m.calc, fmt:m.fmt, skipDelta: m.key==='yoy'};
     }).filter(Boolean);
-    renderCompareKpiRow('shopCompareRow', cData, compareItems);
+    renderCompareKpiRow('shopCompareRow', data, cData, compareItems);
   } else {
     document.getElementById('shopCompareRow').style.display='none';
   }
@@ -1819,9 +1843,9 @@ function renderSessionTab(){
     const compareItems = state.ssKpiSelected.map(key=>{
       const m = SS_KPI_META[key];
       if(!m) return null;
-      return {label:'对比'+m.label, icon:m.icon, calc:m.calc, fmt:m.fmt};
+      return {label:'对比'+m.label, icon:m.icon, calc:m.calc, fmt:m.fmt, skipDelta: m.key==='yoy'};
     }).filter(Boolean);
-    renderCompareKpiRow('ssCompareRow', cData, compareItems);
+    renderCompareKpiRow('ssCompareRow', data, cData, compareItems);
   } else {
     document.getElementById('ssCompareRow').style.display='none';
   }
@@ -2003,9 +2027,9 @@ function renderQianchuanTab(){
     const compareItems = state.qcKpiSelected.map(key=>{
       const m = QC_KPI_META[key];
       if(!m) return null;
-      return {label:'对比'+m.label, icon:m.icon, calc:m.calc, fmt:m.fmt};
+      return {label:'对比'+m.label, icon:m.icon, calc:m.calc, fmt:m.fmt, skipDelta: m.key==='yoy'};
     }).filter(Boolean);
-    renderCompareKpiRow('qcCompareRow', cData, compareItems);
+    renderCompareKpiRow('qcCompareRow', data, cData, compareItems);
   } else {
     document.getElementById('qcCompareRow').style.display='none';
   }

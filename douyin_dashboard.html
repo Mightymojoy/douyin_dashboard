@@ -1403,7 +1403,7 @@ function renderShopChannel(data,k){
   // 商城退后占比 = 列15 — 取筛选期内加权均值
   const mallAfterRatio = totalGsv ? +(data.reduce((s,d)=>s+(d.mallAfterRatio||0)*d.gsv,0)/totalGsv*100).toFixed(1) : 0;
 
-  document.getElementById('shopChannelInfo').textContent = `商场退后占比 ${mallAfterRatio}%`;
+  document.getElementById('shopChannelInfo').textContent = `商城退后占比 ${mallAfterRatio}%`;
 
   // KPI row (5 cards)
   const kpiHtml = `

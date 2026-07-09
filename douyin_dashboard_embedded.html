@@ -551,6 +551,7 @@ tr:nth-child(even) td{background:rgba(0,0,0,.015)}
             <option value="materialRoi">素材ROI</option>
             <option value="mallPromoRoi">商城推广ROI</option>
             <option value="nonGrantFeeRatio">非赠款费比</option>
+            <option value="shortVideoRatio">短视频成交占比</option>
             <option value="yoy">同比变化</option>
           </select>
         </div>
@@ -2063,7 +2064,7 @@ function renderQcSpendChart(data){
   const y1Key = document.getElementById('qcY1Select').value;
   const y2Key = document.getElementById('qcY2Select').value;
   const roiKeys = ['promoRoi','livePromoRoi','directRoi','materialRoi','mallPromoRoi'];
-  const pctKeys = ['nonGrantFeeRatio'];
+  const pctKeys = ['nonGrantFeeRatio','shortVideoRatio'];
   const isPct = pctKeys.includes(y2Key) || y2Key==='yoy';
 
   // 按日期聚合 Y1
@@ -2089,7 +2090,7 @@ function renderQcSpendChart(data){
     const y2Map={};
     data.forEach(d=>{if(!y2Map[d.date]) y2Map[d.date]={sum:0,count:0}; y2Map[d.date].sum+=(d[y2Key]||0); y2Map[d.date].count++;});
     y2Data = sorted.map(k=>y2Map[k]?+(y2Map[k].sum/y2Map[k].count*(pctKeys.includes(y2Key)?100:1)).toFixed(2):0);
-    y2LabelText = {promoRoi:'推广ROI',livePromoRoi:'直播推广ROI',directRoi:'直投ROI',materialRoi:'素材ROI',mallPromoRoi:'商城推广ROI',nonGrantFeeRatio:'非赠款费比'}[y2Key]||y2Key;
+    y2LabelText = {promoRoi:'推广ROI',livePromoRoi:'直播推广ROI',directRoi:'直投ROI',materialRoi:'素材ROI',mallPromoRoi:'商城推广ROI',nonGrantFeeRatio:'非赠款费比',shortVideoRatio:'短视频成交占比'}[y2Key]||y2Key;
   }
 
   const y1Labels = {totalSpend:'总消耗',promoGmv:'推广GMV',liveSpend:'直播花费',livePromoGmv:'直播推广GMV',directSpend:'直投花费',directGmv:'直投GMV',materialSpend:'素材花费',materialGmv:'素材GMV',mallSpend:'商城花费',mallPromoGmv:'商城推广GMV',nonGrantSpend:'非赠款花费'};

@@ -830,14 +830,14 @@ const KPI_GROUPS = [
   ]},
   {name:'退款率',items:[
     {key:'refundRate',label:'自营退款率',icon:'percent',calc:d=>{const g=d.reduce((s,r)=>s+r.gmv,0);const s=d.reduce((s,r)=>s+r.gsv,0);return g?(1-s/g)*100:0},fmt:v=>v.toFixed(2)+'%'},
-    {key:'liveRefundRate',label:'直播间退款率',icon:'percent',calc:d=>d.reduce((s,r)=>s+(r.liveRefundRate||0),0)/d.length*100,fmt:v=>v.toFixed(2)+'%'},
-    {key:'mallRefundRate',label:'商城退款率',icon:'percent',calc:d=>d.reduce((s,r)=>s+(r.mallRefundRate||0),0)/d.length*100,fmt:v=>v.toFixed(2)+'%'}
+    {key:'liveRefundRate',label:'直播间退款率',icon:'percent',calc:d=>{const a=d.reduce((s,r)=>s+(r.liveAmt||0),0);return a?d.reduce((s,r)=>s+(r.liveRefund||0),0)/a*100:0},fmt:v=>v.toFixed(2)+'%'},
+    {key:'mallRefundRate',label:'商城退款率',icon:'percent',calc:d=>{const b=d.reduce((s,r)=>s+(r.cardOrder||0)+(r.otherRe||0)+(r.shortVideo||0),0);return b?d.reduce((s,r)=>s+(r.mallRefund||0),0)/b*100:0},fmt:v=>v.toFixed(2)+'%'}
   ]},
   {name:'转化效率',items:[
     {key:'avgPrice',label:'客单价',icon:'tag',calc:d=>{const g=d.reduce((s,r)=>s+r.gmv,0);const b=d.reduce((s,r)=>s+(r.orderBuyers||0),0);return b?g/b:0},fmt:v=>'¥'+numFmt(Math.round(v))},
-    {key:'expClickRate',label:'曝光点击率',icon:'eye',calc:d=>d.reduce((s,r)=>s+(r.expClickRate||0),0)/d.length*100,fmt:v=>v.toFixed(2)+'%'},
-    {key:'clickConvRate',label:'点击转化率',icon:'mouse-pointer',calc:d=>d.reduce((s,r)=>s+(r.clickConvRate||0),0)/d.length*100,fmt:v=>v.toFixed(2)+'%'},
-    {key:'expConvRate',label:'曝光转化率',icon:'eye',calc:d=>d.reduce((s,r)=>s+(r.expConvRate||0),0)/d.length*100,fmt:v=>v.toFixed(2)+'%'}
+    {key:'expClickRate',label:'曝光点击率',icon:'eye',calc:d=>{const e=d.reduce((s,r)=>s+(r.exposeUsers||0),0);return e?d.reduce((s,r)=>s+(r.clickUsers||0),0)/e*100:0},fmt:v=>v.toFixed(2)+'%'},
+    {key:'clickConvRate',label:'点击转化率',icon:'mouse-pointer',calc:d=>{const c=d.reduce((s,r)=>s+(r.clickUsers||0),0);return c?d.reduce((s,r)=>s+(r.orderBuyers||0),0)/c*100:0},fmt:v=>v.toFixed(2)+'%'},
+    {key:'expConvRate',label:'曝光转化率',icon:'eye',calc:d=>{const e=d.reduce((s,r)=>s+(r.exposeUsers||0),0);return e?d.reduce((s,r)=>s+(r.orderBuyers||0),0)/e*100:0},fmt:v=>v.toFixed(2)+'%'}
   ]},
   {name:'渠道拆解',items:[
     {key:'cardOrder',label:'商品卡成交',icon:'shopping-bag',calc:d=>d.reduce((s,r)=>s+(r.cardOrder||0),0),fmt:v=>moneyFmt(v)},
@@ -847,7 +847,7 @@ const KPI_GROUPS = [
   {name:'费用',items:[
     {key:'subsidy',label:'平台补贴',icon:'gift',calc:d=>d.reduce((s,r)=>s+r.subsidy,0),fmt:v=>moneyFmt(v)},
     {key:'coupon',label:'千川优惠券',icon:'ticket',calc:d=>d.reduce((s,r)=>s+r.coupon,0),fmt:v=>moneyFmt(v)},
-    {key:'feeRatio',label:'店费比',icon:'trending-up',calc:d=>d.reduce((s,r)=>s+(r.feeRatio||0),0)/d.length*100,fmt:v=>v.toFixed(2)+'%'}
+    {key:'feeRatio',label:'店费比',icon:'trending-up',calc:d=>{const g=d.reduce((s,r)=>s+(r.gsv||0),0);return g?d.reduce((s,r)=>s+(r.feeRatio||0)*r.gsv,0)/g*100:0},fmt:v=>v.toFixed(2)+'%'}
   ]}
 ];
 // map key -> meta for quick lookup
@@ -911,7 +911,7 @@ const QC_KPI_GROUPS = [
     {key:'avgDailySpend',label:'日均消耗',icon:'wallet',calc:d=>{const l=d.length;return l?d.reduce((s,r)=>s+(r.totalSpend||0),0)/l:0},fmt:v=>moneyFmt(Math.round(v))},
     {key:'promoGmv',label:'推广GMV',icon:'dollar-sign',calc:d=>d.reduce((s,r)=>s+(r.promoGmv||0),0),fmt:v=>moneyFmt(v)},
     {key:'promoRoi',label:'综合推广ROI',icon:'trending-up',calc:d=>{const s=d.reduce((s,r)=>s+(r.totalSpend||0),0);const g=d.reduce((s,r)=>s+(r.promoGmv||0),0);return s?+(g/s).toFixed(2):0},fmt:v=>v+'x'},
-    {key:'avgPromoRoi',label:'日均推广ROI',icon:'bar-chart-3',calc:d=>d.length?d.reduce((s,r)=>s+(r.promoRoi||0),0)/d.length:0,fmt:v=>v.toFixed(2)+'x'}
+    {key:'avgPromoRoi',label:'日均推广ROI',icon:'bar-chart-3',calc:d=>{const s=d.reduce((s,r)=>s+(r.totalSpend||0),0);const g=d.reduce((s,r)=>s+(r.promoGmv||0),0);return s?+(g/s).toFixed(2):0},fmt:v=>v.toFixed(2)+'x'}
   ]},
   {name:'直播推广',items:[
     {key:'liveSpend',label:'直播花费',icon:'radio',calc:d=>d.reduce((s,r)=>s+(r.liveSpend||0),0),fmt:v=>moneyFmt(v)},
@@ -934,9 +934,9 @@ const QC_KPI_GROUPS = [
     {key:'mallPromoRoi',label:'商城推广ROI',icon:'trending-up',calc:d=>{const s=d.reduce((s,r)=>s+(r.mallSpend||0),0);const g=d.reduce((s,r)=>s+(r.mallPromoGmv||0),0);return s?+(g/s).toFixed(2):0},fmt:v=>v+'x'}
   ]},
   {name:'综合',items:[
-    {key:'shortVideoRatio',label:'短视频引流成交占比',icon:'video',calc:d=>d.length?d.reduce((s,r)=>s+(r.shortVideoRatio||0),0)/d.length*100:0,fmt:v=>v.toFixed(2)+'%'},
+    {key:'shortVideoRatio',label:'短视频引流成交占比',icon:'video',calc:d=>{const g=d.reduce((s,r)=>s+(r.livePromoGmv||0),0);return g?d.reduce((s,r)=>s+(r.shortVideoRatio||0)*(r.livePromoGmv||0),0)/g*100:0},fmt:v=>v.toFixed(2)+'%'},
     {key:'nonGrantSpend',label:'千川非赠款花费',icon:'credit-card',calc:d=>d.reduce((s,r)=>s+(r.nonGrantSpend||0),0),fmt:v=>moneyFmt(v)},
-    {key:'nonGrantFeeRatio',label:'非赠款实际费比',icon:'percent',calc:d=>d.length?d.reduce((s,r)=>s+(r.nonGrantFeeRatio||0),0)/d.length*100:0,fmt:v=>v.toFixed(2)+'%'}
+    {key:'nonGrantFeeRatio',label:'非赠款实际费比',icon:'percent',calc:d=>{const s=d.reduce((s,r)=>s+(r.nonGrantSpend||0),0);return s?d.reduce((s,r)=>s+(r.nonGrantFeeRatio||0)*(r.nonGrantSpend||0),0)/s*100:0},fmt:v=>v.toFixed(2)+'%'}
   ]}
 ];
 const QC_KPI_META = {};

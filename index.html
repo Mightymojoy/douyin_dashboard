@@ -1661,7 +1661,7 @@ function renderShopChart(data,k){
     y2LabelText = '同比变化';
   } else {
     y2Data = data.map(d=>pctKeys.includes(y2Key)?(d[y2Key]||0)*100:d[y2Key]||0);
-,  y2LabelText = {refundRate:'自营退款率',refundRateTime:'自营退款率(退款时间)',feeRatio:'店费比',expClickRate:'曝光点击率',clickConvRate:'点击转化率',expConvRate:'曝光转化率',achieveRate:'GSV达成率',mallBeforeRatio:'商城退前占比',mallAfterRatio:'商城退后占比'}[y2Key]||y2Key;
+    y2LabelText = {refundRate:'自营退款率',refundRateTime:'自营退款率(退款时间)',feeRatio:'店费比',expClickRate:'曝光点击率',clickConvRate:'点击转化率',expConvRate:'曝光转化率',achieveRate:'GSV达成率',mallBeforeRatio:'商城退前占比',mallAfterRatio:'商城退后占比'}[y2Key]||y2Key;
   }
 
   const y1Label = {gmv:'GMV',gsv:'GSV',orderBuyers:'成交人数',liveGsv:'直播GSV',mallGsv:'商城GSV',payGsv:'用户支付GSV',prevYearGsv:'25年同期GSV'}[y1Key]||y1Key;

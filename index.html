@@ -868,9 +868,9 @@ const SS_KPI_GROUPS = [
     {key:'durMin',label:'直播时长(M)',icon:'clock',calc:d=>d.reduce((s,r)=>s+(r.durMin||0),0),fmt:v=>numFmt(Math.round(v))}
   ]},
   {name:'效率指标',items:[
-    {key:'gpm',label:'GPM',icon:'trending-up',calc:d=>d.reduce((s,r)=>s+(r.gpm||0),0)/Math.max(d.length,1),fmt:v=>numFmt(Math.round(v))},
-    {key:'gsvPerHour',label:'时均GSV',icon:'bar-chart-3',calc:d=>d.reduce((s,r)=>s+(r.gsvPerHour||0),0)/Math.max(d.length,1),fmt:v=>moneyFmt(Math.round(v))},
-    {key:'uvPerHour',label:'时均UV',icon:'users',calc:d=>d.reduce((s,r)=>s+(r.uvPerHour||0),0)/Math.max(d.length,1),fmt:v=>numFmt(Math.round(v))}
+    {key:'gpm',label:'GPM',icon:'trending-up',calc:d=>{const uv=d.reduce((s,r)=>s+(r.uv||0),0);return uv?d.reduce((s,r)=>s+(r.gmv||0),0)/uv*1000:0},fmt:v=>numFmt(Math.round(v))},
+    {key:'gsvPerHour',label:'时均GSV',icon:'bar-chart-3',calc:d=>{const h=d.reduce((s,r)=>s+(r.durHour||0),0);return h?d.reduce((s,r)=>s+(r.gsv||0),0)/h:0},fmt:v=>moneyFmt(Math.round(v))},
+    {key:'uvPerHour',label:'时均UV',icon:'users',calc:d=>{const h=d.reduce((s,r)=>s+(r.durHour||0),0);return h?d.reduce((s,r)=>s+(r.uv||0),0)/h:0},fmt:v=>numFmt(Math.round(v))}
   ]},
   {name:'客流指标',items:[
     {key:'uv',label:'UV(场观)',icon:'eye',calc:d=>d.reduce((s,r)=>s+(r.uv||0),0),fmt:v=>numFmt(v)},
@@ -880,24 +880,24 @@ const SS_KPI_GROUPS = [
     {key:'dealBuyers',label:'成交人数',icon:'users',calc:d=>d.reduce((s,r)=>s+(r.dealBuyers||0),0),fmt:v=>numFmt(v)},
     {key:'interactUsers',label:'直播互动人数',icon:'message-circle',calc:d=>d.reduce((s,r)=>s+(r.interactUsers||0),0),fmt:v=>numFmt(v)},
     {key:'newFans',label:'新增粉丝',icon:'user-plus',calc:d=>d.reduce((s,r)=>s+(r.newFans||0),0),fmt:v=>numFmt(v)},
-    {key:'avgViewSec',label:'人均观看(s)',icon:'clock',calc:d=>d.reduce((s,r)=>s+(r.avgViewSec||0),0)/Math.max(d.length,1),fmt:v=>numFmt(Math.round(v))}
+    {key:'avgViewSec',label:'人均观看(s)',icon:'clock',calc:d=>{const uv=d.reduce((s,r)=>s+(r.uv||0),0);return uv?d.reduce((s,r)=>s+(r.avgViewSec||0)*(r.uv||0),0)/uv:0},fmt:v=>numFmt(Math.round(v))}
   ]},
   {name:'转化率',items:[
-    {key:'expViewRate',label:'曝光-观看率',icon:'eye',calc:d=>d.reduce((s,r)=>s+(r.expViewRate||0),0)/Math.max(d.length,1)*100,fmt:v=>v.toFixed(1)+'%'},
-    {key:'viewProdExposeRate',label:'观看-商品曝光率',icon:'eye',calc:d=>d.reduce((s,r)=>s+(r.viewProdExposeRate||0),0)/Math.max(d.length,1)*100,fmt:v=>v.toFixed(1)+'%'},
-    {key:'prodExpClickRate',label:'商品曝光点击率',icon:'mouse-pointer',calc:d=>d.reduce((s,r)=>s+(r.prodExpClickRate||0),0)/Math.max(d.length,1)*100,fmt:v=>v.toFixed(1)+'%'},
-    {key:'prodClickDealRate',label:'商品点击成交率',icon:'shopping-cart',calc:d=>d.reduce((s,r)=>s+(r.prodClickDealRate||0),0)/Math.max(d.length,1)*100,fmt:v=>v.toFixed(1)+'%'},
-    {key:'liveExpDealRate',label:'曝光-成交率',icon:'shopping-cart',calc:d=>d.reduce((s,r)=>s+(r.liveExpDealRate||0),0)/Math.max(d.length,1)*100,fmt:v=>v.toFixed(1)+'%'},
-    {key:'viewDealRate',label:'观看-成交率',icon:'shopping-cart',calc:d=>d.reduce((s,r)=>s+(r.viewDealRate||0),0)/Math.max(d.length,1)*100,fmt:v=>v.toFixed(1)+'%'}
+    {key:'expViewRate',label:'曝光-观看率',icon:'eye',calc:d=>{const le=d.reduce((s,r)=>s+(r.liveExpose||0),0);return le?d.reduce((s,r)=>s+(r.uv||0),0)/le*100:0},fmt:v=>v.toFixed(1)+'%'},
+    {key:'viewProdExposeRate',label:'观看-商品曝光率',icon:'eye',calc:d=>{const uv=d.reduce((s,r)=>s+(r.uv||0),0);return uv?d.reduce((s,r)=>s+(r.prodExpose||0),0)/uv*100:0},fmt:v=>v.toFixed(1)+'%'},
+    {key:'prodExpClickRate',label:'商品曝光点击率',icon:'mouse-pointer',calc:d=>{const pe=d.reduce((s,r)=>s+(r.prodExpose||0),0);return pe?d.reduce((s,r)=>s+(r.prodClick||0),0)/pe*100:0},fmt:v=>v.toFixed(1)+'%'},
+    {key:'prodClickDealRate',label:'商品点击成交率',icon:'shopping-cart',calc:d=>{const pc=d.reduce((s,r)=>s+(r.prodClick||0),0);return pc?d.reduce((s,r)=>s+(r.dealBuyers||0),0)/pc*100:0},fmt:v=>v.toFixed(1)+'%'},
+    {key:'liveExpDealRate',label:'曝光-成交率',icon:'shopping-cart',calc:d=>{const le=d.reduce((s,r)=>s+(r.liveExpose||0),0);return le?d.reduce((s,r)=>s+(r.dealBuyers||0),0)/le*100:0},fmt:v=>v.toFixed(1)+'%'},
+    {key:'viewDealRate',label:'观看-成交率',icon:'shopping-cart',calc:d=>{const uv=d.reduce((s,r)=>s+(r.uv||0),0);return uv?d.reduce((s,r)=>s+(r.dealBuyers||0),0)/uv*100:0},fmt:v=>v.toFixed(1)+'%'}
   ]},
   {name:'互动/粉丝',items:[
-    {key:'expInteractRate',label:'曝光互动率',icon:'message-circle',calc:d=>d.reduce((s,r)=>s+(r.expInteractRate||0),0)/Math.max(d.length,1)*100,fmt:v=>v.toFixed(1)+'%'},
-    {key:'viewInteractRate',label:'观看互动率',icon:'message-circle',calc:d=>d.reduce((s,r)=>s+(r.viewInteractRate||0),0)/Math.max(d.length,1)*100,fmt:v=>v.toFixed(1)+'%'},
-    {key:'followRate',label:'转粉率',icon:'user-plus',calc:d=>d.reduce((s,r)=>s+(r.followRate||0),0)/Math.max(d.length,1)*100,fmt:v=>v.toFixed(1)+'%'}
+    {key:'expInteractRate',label:'曝光互动率',icon:'message-circle',calc:d=>{const le=d.reduce((s,r)=>s+(r.liveExpose||0),0);return le?d.reduce((s,r)=>s+(r.interactUsers||0),0)/le*100:0},fmt:v=>v.toFixed(1)+'%'},
+    {key:'viewInteractRate',label:'观看互动率',icon:'message-circle',calc:d=>{const uv=d.reduce((s,r)=>s+(r.uv||0),0);return uv?d.reduce((s,r)=>s+(r.interactUsers||0),0)/uv*100:0},fmt:v=>v.toFixed(1)+'%'},
+    {key:'followRate',label:'转粉率',icon:'user-plus',calc:d=>{const uv=d.reduce((s,r)=>s+(r.uv||0),0);return uv?d.reduce((s,r)=>s+(r.newFans||0),0)/uv*100:0},fmt:v=>v.toFixed(1)+'%'}
   ]},
   {name:'价格/退款',items:[
-    {key:'liveAvgPrice',label:'直播客单价',icon:'tag',calc:d=>d.reduce((s,r)=>s+(r.liveAvgPrice||0),0)/Math.max(d.length,1),fmt:v=>'¥'+numFmt(Math.round(v))},
-    {key:'refundRate',label:'退款率',icon:'percent',calc:d=>d.reduce((s,r)=>s+(r.refundRate||0),0)/Math.max(d.length,1)*100,fmt:v=>v.toFixed(1)+'%'},
+    {key:'liveAvgPrice',label:'直播客单价',icon:'tag',calc:d=>{const db=d.reduce((s,r)=>s+(r.dealBuyers||0),0);return db?d.reduce((s,r)=>s+(r.gmv||0),0)/db:0},fmt:v=>'¥'+numFmt(Math.round(v))},
+    {key:'refundRate',label:'退款率',icon:'percent',calc:d=>{const gmv=d.reduce((s,r)=>s+(r.gmv||0),0);return gmv?d.reduce((s,r)=>s+(r.refund||0),0)/gmv*100:0},fmt:v=>v.toFixed(1)+'%'},
     {key:'refund',label:'退款金额',icon:'rotate-ccw',calc:d=>d.reduce((s,r)=>s+(r.refund||0),0),fmt:v=>moneyFmt(v)}
   ]}
 ];

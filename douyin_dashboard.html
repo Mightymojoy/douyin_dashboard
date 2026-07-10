@@ -116,6 +116,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);-webkit-font
 .kpi-panel-group label{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text);padding:3px 0;cursor:pointer;transition:color var(--transition)}
 .kpi-panel-group label:hover{color:var(--gold)}
 .kpi-panel-group input[type=checkbox]{accent-color:var(--gold);width:14px;height:14px}
+/* 全选checkbox */
+.select-all-cb{border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:6px}
+.select-all-cb label{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--gold);cursor:pointer}
+.select-all-cb input[type=checkbox]{accent-color:var(--gold);width:14px;height:14px}
 
 /* 5-col KPI row for channel analysis */
 .kpi-row-5{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px}
@@ -1092,8 +1096,30 @@ function getFilteredShopData(forceShop){
 // ============================================================
 //  3.6 KPI PANEL
 // ============================================================
+// 通用全选/取消全选
+function toggleSelectAll(panelType, checked){
+  const map = {shop:{arr:'shopKpiSelected',cnt:'kpiCount',groups:KPI_GROUPS},
+               ss:{arr:'ssKpiSelected',cnt:'ssKpiCount',groups:SS_KPI_GROUPS},
+               qc:{arr:'qcKpiSelected',cnt:'qcKpiCount',groups:QC_KPI_GROUPS}};
+  const p = map[panelType];
+  state[p.arr] = [];
+  if(checked){
+    p.groups.forEach(g=>g.items.forEach(i=>{state[p.arr].push(i.key)}));
+    document.querySelector('#'+p.cnt.replace('Count','PanelBody')+' .select-all-cb input').checked = true;
+  } else {
+    document.querySelector('#'+p.cnt.replace('Count','PanelBody')+' .select-all-cb input').checked = false;
+  }
+  document.getElementById(p.cnt).textContent = state[p.arr].length;
+  renderActiveTab();
+  // Sync checkbox visuals
+  document.querySelectorAll('#'+p.cnt.replace('Count','PanelBody')+' input[type="checkbox"]').forEach(cb=>cb.checked=checked);
+}
+
 function buildKpiPanel(){
   let html = '';
+  const total = KPI_GROUPS.reduce((s,g)=>s+g.items.length,0);
+  const allChecked = state.shopKpiSelected.length===total;
+  html += '<div class="select-all-cb"><label><input type="checkbox" '+(allChecked?'checked':'')+' onchange="toggleSelectAll(\'shop\',this.checked)"> 全选</label></div>';
   KPI_GROUPS.forEach(g=>{
     html += '<div class="kpi-panel-group"><h5>'+g.name+'</h5>';
     g.items.forEach(i=>{
@@ -1139,6 +1165,9 @@ function toggleSsKpiMetric(key){
 }
 function buildSsKpiPanel(){
   let html = '';
+  const total = SS_KPI_GROUPS.reduce((s,g)=>s+g.items.length,0);
+  const allChecked = state.ssKpiSelected.length===total;
+  html += '<div class="select-all-cb"><label><input type="checkbox" '+(allChecked?'checked':'')+' onchange="toggleSelectAll(\'ss\',this.checked)"> 全选</label></div>';
   SS_KPI_GROUPS.forEach(g=>{
     html += '<div class="kpi-panel-group"><h5>'+g.name+'</h5>';
     g.items.forEach(i=>{
@@ -1166,6 +1195,9 @@ function toggleQcKpiMetric(key){
 }
 function buildQcKpiPanel(){
   let html = '';
+  const total = QC_KPI_GROUPS.reduce((s,g)=>s+g.items.length,0);
+  const allChecked = state.qcKpiSelected.length===total;
+  html += '<div class="select-all-cb"><label><input type="checkbox" '+(allChecked?'checked':'')+' onchange="toggleSelectAll(\'qc\',this.checked)"> 全选</label></div>';
   QC_KPI_GROUPS.forEach(g=>{
     html += '<div class="kpi-panel-group"><h5>'+g.name+'</h5>';
     g.items.forEach(i=>{

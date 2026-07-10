@@ -632,20 +632,20 @@ document.getElementById('updateTime').textContent = '数据更新于 ' + NOW;
 // ============================================================
 function numFmt(n){return n.toLocaleString('zh-CN')}
 function moneyFmt(n){return '¥'+(n>=10000?(n/10000).toFixed(1)+'w':numFmt(n))}
-function pctFmt(n){return (n||0).toFixed(1)+'%'}
+function pctFmt(n){return (n||0).toFixed(2)+'%'}
 
 function fmtChange(val){
   if(!val || val===0 || val==='0%') return '<span class="pct-change pct-yellow">0%</span>';
   const up = val>0;
   const cls = up?'pct-green':'pct-red';
   const sym = up?'↑':'↓';
-  return `<span class="pct-change ${cls}">${sym} ${Math.abs(val).toFixed(1)}%</span>`;
+  return `<span class="pct-change ${cls}">${sym} ${Math.abs(val).toFixed(2)}%</span>`;
 }
 
 function calcChange(cur,prev){
   if(!prev||prev===0) return {val:0,label:'-'};
   const v = (cur - prev)/prev*100;
-  return {val:v,label:v>0?'up':v<0?'down':'neutral',text:(v>0?'+':'')+v.toFixed(1)+'%'};
+  return {val:v,label:v>0?'up':v<0?'down':'neutral',text:(v>0?'+':'')+v.toFixed(2)+'%'};
 }
 
 function aggGran(data,dateKey,gran){
@@ -669,7 +669,7 @@ function aggGran(data,dateKey,gran){
     return {
       _aggLabel:gran==='week'?'W'+(k.split('_')[0].slice(5)):k.split('_')[0],
       date:k.split('_')[0],gmv:a.gmv,gsv:a.gsv,orderBuyers:a.orderBuyers,
-      refundRate:+(a.gmv?(1-a.gsv/a.gmv)*100:0).toFixed(1),
+      refundRate:+(a.gmv?(1-a.gsv/a.gmv)*100:0).toFixed(2),
       feeRatio:+(a.feeRatio/a.count).toFixed(4),
       subsidy:a.subsidy,coupon:a.coupon,avgPrice:a.orderBuyers?Math.round(a.gmv/a.orderBuyers):0
     };
@@ -780,7 +780,7 @@ function calcKpiChange(mainVal, compareVal){
   if(!isFinite(pct)) return null;
   const cls = pct > 0 ? 'pct-green' : 'pct-red';
   const arr = pct > 0 ? '▲' : '▼';
-  return { pct, cls, arr, text: `${arr} ${Math.abs(pct).toFixed(1)}%` };
+  return { pct, cls, arr, text: `${arr} ${Math.abs(pct).toFixed(2)}%` };
 }
 
 function renderCompareKpiRow(elId, mainData, compareData, items){
@@ -813,31 +813,31 @@ const KPI_GROUPS = [
     {key:'payGsv',label:'用户支付GSV',icon:'credit-card',calc:d=>d.reduce((s,r)=>s+r.payGsv,0),fmt:v=>moneyFmt(v)},
     {key:'refundAmt',label:'退款金额',icon:'rotate-ccw',calc:d=>d.reduce((s,r)=>s+r.refundAmt,0),fmt:v=>moneyFmt(v)},
     {key:'gsvTarget',label:'GSV目标',icon:'target',calc:d=>d.reduce((s,r)=>s+r.gsvTarget,0),fmt:v=>moneyFmt(v)},
-    {key:'achieveRate',label:'达成率',icon:'milestone',calc:d=>{const g=d.reduce((s,r)=>s+r.gsv,0);const t=d.reduce((s,r)=>s+r.gsvTarget,0);return t?g/t*100:0},fmt:v=>v.toFixed(1)+'%'},
+    {key:'achieveRate',label:'达成率',icon:'milestone',calc:d=>{const g=d.reduce((s,r)=>s+r.gsv,0);const t=d.reduce((s,r)=>s+r.gsvTarget,0);return t?g/t*100:0},fmt:v=>v.toFixed(2)+'%'},
     {key:'orderBuyers',label:'成交人数',icon:'users',calc:d=>d.reduce((s,r)=>s+(r.orderBuyers||0),0),fmt:v=>numFmt(v)}
   ]},
   {name:'同比指标',items:[
     {key:'prevYearGsv',label:'25年同期GSV',icon:'calendar',calc:d=>d.reduce((s,r)=>s+(r.prevYearGsv||0),0),fmt:v=>moneyFmt(v)},
-    {key:'yoy',label:'同比变化',icon:'trending-up',calc:d=>{const g=d.reduce((s,r)=>s+r.gsv,0);const p=d.reduce((s,r)=>s+(r.prevYearGsv||0),0);return p?(g-p)/p*100:0},fmt:v=>{const cls=v>0?'pct-green':'pct-red';const arr=v>0?'▲':'▼';return `<span class="${cls}">${arr} ${v.toFixed(1)}%</span>`}}
+    {key:'yoy',label:'同比变化',icon:'trending-up',calc:d=>{const g=d.reduce((s,r)=>s+r.gsv,0);const p=d.reduce((s,r)=>s+(r.prevYearGsv||0),0);return p?(g-p)/p*100:0},fmt:v=>{const cls=v>0?'pct-green':'pct-red';const arr=v>0?'▲':'▼';return `<span class="${cls}">${arr} ${v.toFixed(2)}%</span>`}}
   ]},
   {name:'商城维度',items:[
     {key:'liveGsv',label:'直播GSV',icon:'radio',calc:d=>d.reduce((s,r)=>s+r.liveGsv,0),fmt:v=>moneyFmt(v)},
     {key:'mallGsv',label:'商城GSV',icon:'shopping-cart',calc:d=>d.reduce((s,r)=>s+r.mallGsv,0),fmt:v=>moneyFmt(v)},
     {key:'avgDailyMallGsv',label:'日均商城GSV',icon:'shopping-cart',calc:d=>{const l=d.length;return l?d.reduce((s,r)=>s+r.mallGsv,0)/l:0},fmt:v=>moneyFmt(Math.round(v))},
-    {key:'mallBeforeRatio',label:'商城退前占比',icon:'percent',calc:d=>{const m=d.reduce((s,r)=>s+r.gmv,0);return m?d.reduce((s,r)=>s+(r.mallBeforeRatio||0)*r.gmv,0)/m*100:0},fmt:v=>v.toFixed(1)+'%'},
-    {key:'mallAfterRatio',label:'商城退后占比',icon:'percent',calc:d=>{const g=d.reduce((s,r)=>s+r.gsv,0);return g?d.reduce((s,r)=>s+(r.mallAfterRatio||0)*r.gsv,0)/g*100:0},fmt:v=>v.toFixed(1)+'%'},
+    {key:'mallBeforeRatio',label:'商城退前占比',icon:'percent',calc:d=>{const m=d.reduce((s,r)=>s+r.gmv,0);return m?d.reduce((s,r)=>s+(r.mallBeforeRatio||0)*r.gmv,0)/m*100:0},fmt:v=>v.toFixed(2)+'%'},
+    {key:'mallAfterRatio',label:'商城退后占比',icon:'percent',calc:d=>{const g=d.reduce((s,r)=>s+r.gsv,0);return g?d.reduce((s,r)=>s+(r.mallAfterRatio||0)*r.gsv,0)/g*100:0},fmt:v=>v.toFixed(2)+'%'},
     {key:'mallRefund',label:'商城退款',icon:'rotate-ccw',calc:d=>d.reduce((s,r)=>s+(r.mallRefund||0),0),fmt:v=>moneyFmt(v)}
   ]},
   {name:'退款率',items:[
-    {key:'refundRate',label:'自营退款率',icon:'percent',calc:d=>{const g=d.reduce((s,r)=>s+r.gmv,0);const s=d.reduce((s,r)=>s+r.gsv,0);return g?(1-s/g)*100:0},fmt:v=>v.toFixed(1)+'%'},
-    {key:'liveRefundRate',label:'直播间退款率',icon:'percent',calc:d=>d.reduce((s,r)=>s+(r.liveRefundRate||0),0)/d.length*100,fmt:v=>v.toFixed(1)+'%'},
-    {key:'mallRefundRate',label:'商城退款率',icon:'percent',calc:d=>d.reduce((s,r)=>s+(r.mallRefundRate||0),0)/d.length*100,fmt:v=>v.toFixed(1)+'%'}
+    {key:'refundRate',label:'自营退款率',icon:'percent',calc:d=>{const g=d.reduce((s,r)=>s+r.gmv,0);const s=d.reduce((s,r)=>s+r.gsv,0);return g?(1-s/g)*100:0},fmt:v=>v.toFixed(2)+'%'},
+    {key:'liveRefundRate',label:'直播间退款率',icon:'percent',calc:d=>d.reduce((s,r)=>s+(r.liveRefundRate||0),0)/d.length*100,fmt:v=>v.toFixed(2)+'%'},
+    {key:'mallRefundRate',label:'商城退款率',icon:'percent',calc:d=>d.reduce((s,r)=>s+(r.mallRefundRate||0),0)/d.length*100,fmt:v=>v.toFixed(2)+'%'}
   ]},
   {name:'转化效率',items:[
     {key:'avgPrice',label:'客单价',icon:'tag',calc:d=>{const g=d.reduce((s,r)=>s+r.gmv,0);const b=d.reduce((s,r)=>s+(r.orderBuyers||0),0);return b?g/b:0},fmt:v=>'¥'+numFmt(Math.round(v))},
-    {key:'expClickRate',label:'曝光点击率',icon:'eye',calc:d=>d.reduce((s,r)=>s+(r.expClickRate||0),0)/d.length*100,fmt:v=>v.toFixed(1)+'%'},
-    {key:'clickConvRate',label:'点击转化率',icon:'mouse-pointer',calc:d=>d.reduce((s,r)=>s+(r.clickConvRate||0),0)/d.length*100,fmt:v=>v.toFixed(1)+'%'},
-    {key:'expConvRate',label:'曝光转化率',icon:'eye',calc:d=>d.reduce((s,r)=>s+(r.expConvRate||0),0)/d.length*100,fmt:v=>v.toFixed(1)+'%'}
+    {key:'expClickRate',label:'曝光点击率',icon:'eye',calc:d=>d.reduce((s,r)=>s+(r.expClickRate||0),0)/d.length*100,fmt:v=>v.toFixed(2)+'%'},
+    {key:'clickConvRate',label:'点击转化率',icon:'mouse-pointer',calc:d=>d.reduce((s,r)=>s+(r.clickConvRate||0),0)/d.length*100,fmt:v=>v.toFixed(2)+'%'},
+    {key:'expConvRate',label:'曝光转化率',icon:'eye',calc:d=>d.reduce((s,r)=>s+(r.expConvRate||0),0)/d.length*100,fmt:v=>v.toFixed(2)+'%'}
   ]},
   {name:'渠道拆解',items:[
     {key:'cardOrder',label:'商品卡成交',icon:'shopping-bag',calc:d=>d.reduce((s,r)=>s+(r.cardOrder||0),0),fmt:v=>moneyFmt(v)},
@@ -847,7 +847,7 @@ const KPI_GROUPS = [
   {name:'费用',items:[
     {key:'subsidy',label:'平台补贴',icon:'gift',calc:d=>d.reduce((s,r)=>s+r.subsidy,0),fmt:v=>moneyFmt(v)},
     {key:'coupon',label:'千川优惠券',icon:'ticket',calc:d=>d.reduce((s,r)=>s+r.coupon,0),fmt:v=>moneyFmt(v)},
-    {key:'feeRatio',label:'店费比',icon:'trending-up',calc:d=>d.reduce((s,r)=>s+(r.feeRatio||0),0)/d.length*100,fmt:v=>v.toFixed(1)+'%'}
+    {key:'feeRatio',label:'店费比',icon:'trending-up',calc:d=>d.reduce((s,r)=>s+(r.feeRatio||0),0)/d.length*100,fmt:v=>v.toFixed(2)+'%'}
   ]}
 ];
 // map key -> meta for quick lookup
@@ -883,21 +883,21 @@ const SS_KPI_GROUPS = [
     {key:'avgViewSec',label:'人均观看(s)',icon:'clock',calc:d=>{const uv=d.reduce((s,r)=>s+(r.uv||0),0);return uv?d.reduce((s,r)=>s+(r.avgViewSec||0)*(r.uv||0),0)/uv:0},fmt:v=>numFmt(Math.round(v))}
   ]},
   {name:'转化率',items:[
-    {key:'expViewRate',label:'曝光-观看率',icon:'eye',calc:d=>{const le=d.reduce((s,r)=>s+(r.liveExpose||0),0);return le?d.reduce((s,r)=>s+(r.uv||0),0)/le*100:0},fmt:v=>v.toFixed(1)+'%'},
-    {key:'viewProdExposeRate',label:'观看-商品曝光率',icon:'eye',calc:d=>{const uv=d.reduce((s,r)=>s+(r.uv||0),0);return uv?d.reduce((s,r)=>s+(r.prodExpose||0),0)/uv*100:0},fmt:v=>v.toFixed(1)+'%'},
-    {key:'prodExpClickRate',label:'商品曝光点击率',icon:'mouse-pointer',calc:d=>{const pe=d.reduce((s,r)=>s+(r.prodExpose||0),0);return pe?d.reduce((s,r)=>s+(r.prodClick||0),0)/pe*100:0},fmt:v=>v.toFixed(1)+'%'},
-    {key:'prodClickDealRate',label:'商品点击成交率',icon:'shopping-cart',calc:d=>{const pc=d.reduce((s,r)=>s+(r.prodClick||0),0);return pc?d.reduce((s,r)=>s+(r.dealBuyers||0),0)/pc*100:0},fmt:v=>v.toFixed(1)+'%'},
-    {key:'liveExpDealRate',label:'曝光-成交率',icon:'shopping-cart',calc:d=>{const le=d.reduce((s,r)=>s+(r.liveExpose||0),0);return le?d.reduce((s,r)=>s+(r.dealBuyers||0),0)/le*100:0},fmt:v=>v.toFixed(1)+'%'},
-    {key:'viewDealRate',label:'观看-成交率',icon:'shopping-cart',calc:d=>{const uv=d.reduce((s,r)=>s+(r.uv||0),0);return uv?d.reduce((s,r)=>s+(r.dealBuyers||0),0)/uv*100:0},fmt:v=>v.toFixed(1)+'%'}
+    {key:'expViewRate',label:'曝光-观看率',icon:'eye',calc:d=>{const le=d.reduce((s,r)=>s+(r.liveExpose||0),0);return le?d.reduce((s,r)=>s+(r.uv||0),0)/le*100:0},fmt:v=>v.toFixed(2)+'%'},
+    {key:'viewProdExposeRate',label:'观看-商品曝光率',icon:'eye',calc:d=>{const uv=d.reduce((s,r)=>s+(r.uv||0),0);return uv?d.reduce((s,r)=>s+(r.prodExpose||0),0)/uv*100:0},fmt:v=>v.toFixed(2)+'%'},
+    {key:'prodExpClickRate',label:'商品曝光点击率',icon:'mouse-pointer',calc:d=>{const pe=d.reduce((s,r)=>s+(r.prodExpose||0),0);return pe?d.reduce((s,r)=>s+(r.prodClick||0),0)/pe*100:0},fmt:v=>v.toFixed(2)+'%'},
+    {key:'prodClickDealRate',label:'商品点击成交率',icon:'shopping-cart',calc:d=>{const pc=d.reduce((s,r)=>s+(r.prodClick||0),0);return pc?d.reduce((s,r)=>s+(r.dealBuyers||0),0)/pc*100:0},fmt:v=>v.toFixed(2)+'%'},
+    {key:'liveExpDealRate',label:'曝光-成交率',icon:'shopping-cart',calc:d=>{const le=d.reduce((s,r)=>s+(r.liveExpose||0),0);return le?d.reduce((s,r)=>s+(r.dealBuyers||0),0)/le*100:0},fmt:v=>v.toFixed(2)+'%'},
+    {key:'viewDealRate',label:'观看-成交率',icon:'shopping-cart',calc:d=>{const uv=d.reduce((s,r)=>s+(r.uv||0),0);return uv?d.reduce((s,r)=>s+(r.dealBuyers||0),0)/uv*100:0},fmt:v=>v.toFixed(2)+'%'}
   ]},
   {name:'互动/粉丝',items:[
-    {key:'expInteractRate',label:'曝光互动率',icon:'message-circle',calc:d=>{const le=d.reduce((s,r)=>s+(r.liveExpose||0),0);return le?d.reduce((s,r)=>s+(r.interactUsers||0),0)/le*100:0},fmt:v=>v.toFixed(1)+'%'},
-    {key:'viewInteractRate',label:'观看互动率',icon:'message-circle',calc:d=>{const uv=d.reduce((s,r)=>s+(r.uv||0),0);return uv?d.reduce((s,r)=>s+(r.interactUsers||0),0)/uv*100:0},fmt:v=>v.toFixed(1)+'%'},
-    {key:'followRate',label:'转粉率',icon:'user-plus',calc:d=>{const uv=d.reduce((s,r)=>s+(r.uv||0),0);return uv?d.reduce((s,r)=>s+(r.newFans||0),0)/uv*100:0},fmt:v=>v.toFixed(1)+'%'}
+    {key:'expInteractRate',label:'曝光互动率',icon:'message-circle',calc:d=>{const le=d.reduce((s,r)=>s+(r.liveExpose||0),0);return le?d.reduce((s,r)=>s+(r.interactUsers||0),0)/le*100:0},fmt:v=>v.toFixed(2)+'%'},
+    {key:'viewInteractRate',label:'观看互动率',icon:'message-circle',calc:d=>{const uv=d.reduce((s,r)=>s+(r.uv||0),0);return uv?d.reduce((s,r)=>s+(r.interactUsers||0),0)/uv*100:0},fmt:v=>v.toFixed(2)+'%'},
+    {key:'followRate',label:'转粉率',icon:'user-plus',calc:d=>{const uv=d.reduce((s,r)=>s+(r.uv||0),0);return uv?d.reduce((s,r)=>s+(r.newFans||0),0)/uv*100:0},fmt:v=>v.toFixed(2)+'%'}
   ]},
   {name:'价格/退款',items:[
     {key:'liveAvgPrice',label:'直播客单价',icon:'tag',calc:d=>{const db=d.reduce((s,r)=>s+(r.dealBuyers||0),0);return db?d.reduce((s,r)=>s+(r.gmv||0),0)/db:0},fmt:v=>'¥'+numFmt(Math.round(v))},
-    {key:'refundRate',label:'退款率',icon:'percent',calc:d=>{const gmv=d.reduce((s,r)=>s+(r.gmv||0),0);return gmv?d.reduce((s,r)=>s+(r.refund||0),0)/gmv*100:0},fmt:v=>v.toFixed(1)+'%'},
+    {key:'refundRate',label:'退款率',icon:'percent',calc:d=>{const gmv=d.reduce((s,r)=>s+(r.gmv||0),0);return gmv?d.reduce((s,r)=>s+(r.refund||0),0)/gmv*100:0},fmt:v=>v.toFixed(2)+'%'},
     {key:'refund',label:'退款金额',icon:'rotate-ccw',calc:d=>d.reduce((s,r)=>s+(r.refund||0),0),fmt:v=>moneyFmt(v)}
   ]}
 ];
@@ -934,9 +934,9 @@ const QC_KPI_GROUPS = [
     {key:'mallPromoRoi',label:'商城推广ROI',icon:'trending-up',calc:d=>{const s=d.reduce((s,r)=>s+(r.mallSpend||0),0);const g=d.reduce((s,r)=>s+(r.mallPromoGmv||0),0);return s?+(g/s).toFixed(2):0},fmt:v=>v+'x'}
   ]},
   {name:'综合',items:[
-    {key:'shortVideoRatio',label:'短视频引流成交占比',icon:'video',calc:d=>d.length?d.reduce((s,r)=>s+(r.shortVideoRatio||0),0)/d.length*100:0,fmt:v=>v.toFixed(1)+'%'},
+    {key:'shortVideoRatio',label:'短视频引流成交占比',icon:'video',calc:d=>d.length?d.reduce((s,r)=>s+(r.shortVideoRatio||0),0)/d.length*100:0,fmt:v=>v.toFixed(2)+'%'},
     {key:'nonGrantSpend',label:'千川非赠款花费',icon:'credit-card',calc:d=>d.reduce((s,r)=>s+(r.nonGrantSpend||0),0),fmt:v=>moneyFmt(v)},
-    {key:'nonGrantFeeRatio',label:'非赠款实际费比',icon:'percent',calc:d=>d.length?d.reduce((s,r)=>s+(r.nonGrantFeeRatio||0),0)/d.length*100:0,fmt:v=>v.toFixed(1)+'%'}
+    {key:'nonGrantFeeRatio',label:'非赠款实际费比',icon:'percent',calc:d=>d.length?d.reduce((s,r)=>s+(r.nonGrantFeeRatio||0),0)/d.length*100:0,fmt:v=>v.toFixed(2)+'%'}
   ]}
 ];
 const QC_KPI_META = {};
@@ -1049,7 +1049,7 @@ function renderOverviewTab(){
       {label:'对比总GSV',icon:'bar-chart-3',calc:d=>d.reduce((s,r)=>s+r.gsv,0),fmt:v=>moneyFmt(v)},
       {label:'对比成交人数',icon:'users',calc:d=>d.reduce((s,r)=>s+(r.orderBuyers||0),0),fmt:v=>numFmt(v)},
       {label:'对比退款率',icon:'percent',calc:d=>{const g=d.reduce((s,r)=>s+r.gmvR,0);const gv=d.reduce((s,r)=>s+r.gsvR,0);return g?(1-gv/g)*100:0},fmt:v=>pctFmt(v)},
-      {label:'对比费比',icon:'percent',calc:d=>{const f=d.reduce((s,r)=>s+r.feeSum,0);const g=d.reduce((s,r)=>s+r.gsv,0);return g?+(f/g*100).toFixed(1):0},fmt:v=>pctFmt(v)},
+      {label:'对比费比',icon:'percent',calc:d=>{const f=d.reduce((s,r)=>s+r.feeSum,0);const g=d.reduce((s,r)=>s+r.gsv,0);return g?+(f/g*100).toFixed(2):0},fmt:v=>pctFmt(v)},
       {label:'对比客单价',icon:'tag',calc:d=>{const g=d.reduce((s,r)=>s+r.gmv,0);const b=d.reduce((s,r)=>s+(r.orderBuyers||0),0);return b?Math.round(g/b):0},fmt:v=>'¥'+numFmt(v)},
       {label:'对比优惠券',icon:'credit-card',calc:d=>d.reduce((s,r)=>s+r.couponSum,0),fmt:v=>moneyFmt(v)},
       {label:'对比总消耗',icon:'wallet',calc:d=>d.reduce((s,r)=>s+(r.nonGrantSpend||0),0),fmt:v=>moneyFmt(v)}
@@ -1201,7 +1201,7 @@ function renderOvKpi(data){
       ${ch.label!=='-'?`<div class="kpi-change ${ch.label}">${ch.text}</div>`:''}</div>
     <div class="kpi-card"><div class="kpi-icon"><i data-lucide="bar-chart-3"></i></div>
       <div class="kpi-label">总GSV</div><div class="kpi-value">${moneyFmt(total.gsv)}</div>
-      <div class="kpi-change ${yoyCls}">${yoyArrow} ${yoyVal.toFixed(1)}%</div></div>
+      <div class="kpi-change ${yoyCls}">${yoyArrow} ${yoyVal.toFixed(2)}%</div></div>
     <div class="kpi-card"><div class="kpi-icon"><i data-lucide="calendar"></i></div>
       <div class="kpi-label">25年同期GSV</div><div class="kpi-value">${moneyFmt(total.prevYearGsv)}</div></div>
     <div class="kpi-card"><div class="kpi-icon"><i data-lucide="shopping-bag"></i></div>
@@ -1231,7 +1231,7 @@ function renderOvShopCompare(data){
         <div class="sm-item"><span class="sm-label">GMV</span><span class="sm-value">${moneyFmt(gmv)}</span></div>
         <div class="sm-item"><span class="sm-label">退款率</span><span class="sm-value">${pctFmt(refundRate)}</span></div>
         <div class="sm-item"><span class="sm-label">成交人数</span><span class="sm-value">${numFmt(orderBuyers)}</span></div>
-        <div class="sm-item"><span class="sm-label">店费比</span><span class="sm-value">${(avgFeeRatio*100).toFixed(1)}%</span></div>
+        <div class="sm-item"><span class="sm-label">店费比</span><span class="sm-value">${(avgFeeRatio*100).toFixed(2)}%</span></div>
       </div>
     </div>`;
   });
@@ -1361,7 +1361,7 @@ function renderOvTable(data){
     {key:'yoy',label:'同比变化',fmt:null},
     {key:'orderBuyers',label:'成交人数',fmt:v=>numFmt(v)},
     {key:'refundRate',label:'退款率',fmt:v=>pctFmt(v)},
-    {key:'feeRatio',label:'店费比',fmt:v=>v.toFixed(1)+'%'},
+    {key:'feeRatio',label:'店费比',fmt:v=>v.toFixed(2)+'%'},
     {key:'avgPrice',label:'客单价',fmt:v=>'¥'+numFmt(v)}
   ];
   let tbody='';
@@ -1387,7 +1387,7 @@ function renderOvTable(data){
       if(m.key==='yoy'){
         const cls = val>0?'pct-green':'pct-red';
         const arr = val>0?'▲':'▼';
-        tbody+='<td class="num"><span class="'+cls+' pct-change">'+arr+' '+val.toFixed(1)+'%</span></td>';
+        tbody+='<td class="num"><span class="'+cls+' pct-change">'+arr+' '+val.toFixed(2)+'%</span></td>';
       }else{
         tbody+='<td class="num">'+m.fmt(val)+'</td>';
       }
@@ -1437,9 +1437,9 @@ function renderShopChannel(data,k){
   const totalGsv = data.reduce((s,d)=>s+d.gsv,0);
   const totalLive = data.reduce((s,d)=>s+d.liveGsv,0);
   const totalMall = data.reduce((s,d)=>s+d.mallGsv,0);
-  const mallRatioTotal = totalGsv ? +(totalMall/totalGsv*100).toFixed(1) : 0;
+  const mallRatioTotal = totalGsv ? +(totalMall/totalGsv*100).toFixed(2) : 0;
   // 商城退后占比 = 列15 — 取筛选期内加权均值
-  const mallAfterRatio = totalGsv ? +(data.reduce((s,d)=>s+(d.mallAfterRatio||0)*d.gsv,0)/totalGsv*100).toFixed(1) : 0;
+  const mallAfterRatio = totalGsv ? +(data.reduce((s,d)=>s+(d.mallAfterRatio||0)*d.gsv,0)/totalGsv*100).toFixed(2) : 0;
 
   document.getElementById('shopChannelInfo').textContent = `商城退后占比 ${mallAfterRatio}%`;
 
@@ -1484,7 +1484,7 @@ function renderShopChannel(data,k){
               const total=ds.data.reduce((s,v)=>s+v,0);
               return chart.data.labels.map((l,i)=>{
                 const val=ds.data[i];
-                const pct=total?(val/total*100).toFixed(1):0;
+                const pct=total?(val/total*100).toFixed(2):0;
                 return {text:l+'  '+moneyFmt(val)+'  '+pct+'%',fillStyle:ds.backgroundColor[i],strokeStyle:'transparent',pointStyle:'circle',fontSize:11};
               });
             }
@@ -1494,7 +1494,7 @@ function renderShopChannel(data,k){
           callbacks:{
             label:function(ctx){
               const total=ctx.dataset.data.reduce((s,v)=>s+v,0);
-              const pct=total?(ctx.parsed/total*100).toFixed(1):0;
+              const pct=total?(ctx.parsed/total*100).toFixed(2):0;
               return ' '+moneyFmt(ctx.parsed)+' ('+pct+'%)';
             }
           }
@@ -1524,10 +1524,10 @@ function renderShopMallTrend(data){
       weeks[wk].mallGsv=(weeks[wk].mallGsv||0)+d.mallGsv;
     });
     labels=Object.keys(weeks);
-    values=labels.map(w=>weeks[w].gsv?+(weeks[w].mallGsv/weeks[w].gsv*100).toFixed(1):0);
+    values=labels.map(w=>weeks[w].gsv?+(weeks[w].mallGsv/weeks[w].gsv*100).toFixed(2):0);
   } else {
     labels=data.map(d=>d.date);
-    values=data.map(d=>+(d.mallAfterRatio*100).toFixed(1));
+    values=data.map(d=>+(d.mallAfterRatio*100).toFixed(2));
   }
   if(charts.shopMallTrend) charts.shopMallTrend.destroy();
   const ctx = document.getElementById('shopMallTrendChart').getContext('2d');
@@ -1594,7 +1594,7 @@ function renderShopLiveMallStacked(data){
               for(let j=0;j<ctx.chart.data.datasets.length;j++){
                 total+=ctx.chart.data.datasets[j].data[ctx.dataIndex];
               }
-              const pct=total?(val/total*100).toFixed(1):0;
+              const pct=total?(val/total*100).toFixed(2):0;
               return ds+': '+moneyFmt(val)+' ('+pct+'%)';
             }
           }
@@ -1714,10 +1714,10 @@ function renderShopTable(data){
     const yoyArr = yoyVal>0?'▲':'▼';
     html+=`<tr><td>${d.date}</td><td class="num">${moneyFmt(d.gmv)}</td><td class="num">${moneyFmt(d.gsv)}</td>
       <td class="num">${d.prevYearGsv?moneyFmt(d.prevYearGsv):'—'}</td>
-      <td class="num"><span class="${yoyCls} pct-change">${yoyArr} ${yoyVal.toFixed(1)}%</span></td>
+      <td class="num"><span class="${yoyCls} pct-change">${yoyArr} ${yoyVal.toFixed(2)}%</span></td>
       <td class="num">${numFmt(d.orderBuyers||0)}</td>
-      <td class="num"><span class="${d.refundRate>0.08?'pct-red':d.refundRate>0.05?'pct-yellow':'pct-green'} pct-change">${(d.refundRate*100).toFixed(1)}%</span></td>
-      <td class="num">${(d.feeRatio*100).toFixed(1)}%</td><td class="num">¥${numFmt(Math.round(d.avgPrice))}</td>
+      <td class="num"><span class="${d.refundRate>0.08?'pct-red':d.refundRate>0.05?'pct-yellow':'pct-green'} pct-change">${(d.refundRate*100).toFixed(2)}%</span></td>
+      <td class="num">${(d.feeRatio*100).toFixed(2)}%</td><td class="num">¥${numFmt(Math.round(d.avgPrice))}</td>
       <td class="num">${moneyFmt(d.subsidy)}</td><td class="num">${moneyFmt(d.coupon)}</td></tr>`;
   });
   html+='</tbody></table>';
@@ -2016,7 +2016,7 @@ function renderSsTable(data){
       <td class="num">${Math.round(d.durMin||0)}min</td><td class="num">${moneyFmt(d.gmv)}</td>
       <td class="num">${numFmt(d.uv||0)}</td>
       <td class="num">${numFmt(d.gpm||0)}</td>
-      <td class="num"><span class="${(d.refundRate||0)>0.08?'pct-red':(d.refundRate||0)>0.05?'pct-yellow':'pct-green'} pct-change">${((d.refundRate||0)*100).toFixed(1)}%</span></td>
+      <td class="num"><span class="${(d.refundRate||0)>0.08?'pct-red':(d.refundRate||0)>0.05?'pct-yellow':'pct-green'} pct-change">${((d.refundRate||0)*100).toFixed(2)}%</span></td>
       <td class="num">${numFmt(d.avgViewSec||0)}</td></tr>`;
   });
   html+='</tbody></table>';
@@ -2196,7 +2196,7 @@ function renderQcRank(data){
     const pct = (a.totalSpend/maxSpend*100).toFixed(0);
     const avgRoi = a.count?(a.promoRoi/a.count).toFixed(2):0;
     const totalTotal = ranked.reduce((s,r)=>s+r.totalSpend,0);
-    const spendShare = totalTotal?+(a.totalSpend/totalTotal*100).toFixed(1):0;
+    const spendShare = totalTotal?+(a.totalSpend/totalTotal*100).toFixed(2):0;
     let rankClass = i===0?'gold':i===1?'silver':i===2?'bronze':'';
     html+=`<tr><td><span class="rank-badge ${rankClass}">${i+1}</span></td>
       <td style="font-weight:600">${a.date}</td>

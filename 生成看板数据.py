@@ -167,7 +167,7 @@ for sidx, sname in enumerate(SHOP_KEYS):
         nonGrantSpend = safe_float(df.iloc[r, 78])     # 千川非赠款花费
         nonGrantFeeRatio = safe_float(df.iloc[r, 79])  # 非赠款实际费比
 
-        if totalSpend > 0 or promoGmv > 0:
+        if totalSpend > 0 or promoGmv > 0 or liveSpend > 0 or directSpend > 0 or materialSpend > 0 or mallSpend > 0 or nonGrantSpend > 0:
             qianchuan_data.append({
                 'date': date_str,
                 'totalSpend': totalSpend,

@@ -259,7 +259,7 @@ tr:nth-child(even) td{background:rgba(0,0,0,.015)}
 <nav class="nav">
   <a class="nav-brand" href="#"><i data-lucide="bar-chart-3"></i><span>ITO · 抖音店铺数据看板</span></a>
   <div class="nav-right">
-    <span class="nav-time"><i data-lucide="clock"></i><span id="updateTime">数据更新于 2026-07-07 10:00</span></span>
+    <span class="nav-time"><i data-lucide="clock"></i><span id="updateTime">数据更新于 2026-07-31 10:00</span></span>
     <span class="nav-dot"></span>
     <span style="font-size:11px;color:var(--text-tertiary)">v1.0</span>
   </div>
@@ -289,9 +289,9 @@ tr:nth-child(even) td{background:rgba(0,0,0,.015)}
 
   <div class="filter-group">
     <span class="filter-label">日期</span>
-    <input type="date" class="date-input" id="startDate" value="2026-06-01">
+    <input type="date" class="date-input" id="startDate" value="2026-01-01">
     <span class="date-connector">至</span>
-    <input type="date" class="date-input" id="endDate" value="2026-07-07">
+    <input type="date" class="date-input" id="endDate" value="2026-07-31">
   </div>
 
   <div class="filter-divider"></div>
@@ -629,7 +629,7 @@ Object.keys(D).forEach(sid=>{
   (D[sid].qianchuan||[]).forEach(q=>{QC_DATA.push({...q,shop:sid})});
 });
 
-const NOW = '2026-07-07 10:00';
+const NOW = '2026-07-31 10:00';
 document.getElementById('updateTime').textContent = '数据更新于 ' + NOW;
 
 // ============================================================

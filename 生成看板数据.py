@@ -214,6 +214,19 @@ inline_script = f'<script>window.DASHBOARD_DATA = {json_str};</script>'
 
 if script_tag in html_content:
     html_content = html_content.replace(script_tag, inline_script)
+    # 计算数据日期范围 (排除1970-01-01汇总行)
+    all_dates = []
+    for sid in output:
+        for r in output[sid]['shop']:
+            if r['date'] != '1970-01-01':
+                all_dates.append(r['date'])
+    if all_dates:
+        min_date = min(all_dates)
+        max_date = max(all_dates)
+        html_content = html_content.replace('value="2026-06-01"', f'value="{min_date}"', 1)
+        html_content = html_content.replace('value="2026-07-07"', f'value="{max_date}"', 1)
+        html_content = html_content.replace('2026-07-07 10:00', f'{max_date} 10:00')
+        html_content = html_content.replace("const NOW = '2026-07-07 10:00';", f"const NOW = '{max_date} 10:00';")
     with open(HTML_OUT, 'w', encoding='utf-8') as f:
         f.write(html_content)
     print(f'已输出: {HTML_OUT} ({os.path.getsize(HTML_OUT)/1024:.0f} KB, 数据内嵌版)')

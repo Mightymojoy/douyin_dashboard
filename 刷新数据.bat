@@ -18,13 +18,13 @@ if errorlevel 1 goto :FAIL
 set "GIT=C:\Program Files\Git\cmd\git.exe"
 if not exist "%GIT%" (echo [WARN] Git not found, skip push. & goto :END)
 set GIT_TERMINAL_PROMPT=0
-echo Checking git branch...
-"%GIT%" checkout master 2>nul
-if errorlevel 1 "%GIT%" checkout -b master 2>nul
 echo Pushing to GitHub...
+"%GIT%" checkout master 2>nul
 "%GIT%" add -A
 "%GIT%" commit -m "auto: data update" --allow-empty >nul 2>&1
-"%GIT%" pull --rebase --autostash >nul 2>&1
+"%GIT%" fetch origin 2>nul
+"%GIT%" reset --soft origin/master 2>nul
+"%GIT%" commit -m "auto: data update" --allow-empty >nul 2>&1
 "%GIT%" push -u origin master
 if not errorlevel 1 (echo Done!) else echo [WARN] Git push failed.
 goto :END

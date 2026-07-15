@@ -259,7 +259,7 @@ tr:nth-child(even) td{background:rgba(0,0,0,.015)}
 <nav class="nav">
   <a class="nav-brand" href="#"><i data-lucide="bar-chart-3"></i><span>ITO · 抖音店铺数据看板</span></a>
   <div class="nav-right">
-    <span class="nav-time"><i data-lucide="clock"></i><span id="updateTime">数据更新于 2026-07-31 10:00</span></span>
+    <span class="nav-time"><i data-lucide="clock"></i><span id="updateTime">数据更新于 2026-07-15 15:36</span></span>
     <span class="nav-dot"></span>
     <span style="font-size:11px;color:var(--text-tertiary)">v1.0</span>
   </div>
@@ -629,7 +629,7 @@ Object.keys(D).forEach(sid=>{
   (D[sid].qianchuan||[]).forEach(q=>{QC_DATA.push({...q,shop:sid})});
 });
 
-const NOW = '2026-07-31 10:00';
+const NOW = '2026-07-15 15:36';
 document.getElementById('updateTime').textContent = '数据更新于 ' + NOW;
 
 // ============================================================

@@ -1,5 +1,6 @@
 """生成看板数据: 抖音自营店铺数据源.xlsx -> dashboard_data.json"""
 import pandas as pd, json, os
+from datetime import datetime
 
 SRC = os.path.join(os.path.dirname(__file__), '抖音自营店铺数据源.xlsx')
 OUT = os.path.join(os.path.dirname(__file__), 'dashboard_data.json')
@@ -223,10 +224,11 @@ if script_tag in html_content:
     if all_dates:
         min_date = min(all_dates)
         max_date = max(all_dates)
+        now_str = datetime.now().strftime('%Y-%m-%d %H:%M')
         html_content = html_content.replace('value="2026-06-01"', f'value="{min_date}"', 1)
         html_content = html_content.replace('value="2026-07-07"', f'value="{max_date}"', 1)
-        html_content = html_content.replace('2026-07-07 10:00', f'{max_date} 10:00')
-        html_content = html_content.replace("const NOW = '2026-07-07 10:00';", f"const NOW = '{max_date} 10:00';")
+        html_content = html_content.replace('2026-07-07 10:00', now_str)
+        html_content = html_content.replace("const NOW = '2026-07-07 10:00';", f"const NOW = '{now_str}';")
     with open(HTML_OUT, 'w', encoding='utf-8') as f:
         f.write(html_content)
     print(f'已输出: {HTML_OUT} ({os.path.getsize(HTML_OUT)/1024:.0f} KB, 数据内嵌版)')

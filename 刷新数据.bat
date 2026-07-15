@@ -1,14 +1,27 @@
 @echo off
 setlocal
-cd /d "e:\抖音店铺-看板" 2>nul
-if errorlevel 1 (echo [ERROR] & pause & exit /b 1)
-echo Refreshing...
-python 生成看板数据.py
-if errorlevel 1 (echo [ERROR] & pause & exit /b 1)
-echo Pushing to GitHub...
-git add -A
-git commit -m "auto: data update" >nul 2>&1
-git push
-if errorlevel 1 (echo [WARN] Git push failed.)
-echo Done!
+cd /d "%~dp0" 2>nul
+if not errorlevel 1 goto :RUN
+pushd "%~dp0" 2>nul
+if not errorlevel 1 goto :RUN
+for %%D in (Z Y X W V) do (
+  net use %%D: "\\172.16.10.3\供&销资料同步\店铺数据源\抖音店铺数据源\抖音店铺-看板" /persistent:no >nul 2>&1
+  if not errorlevel 1 (%%D: & goto :RUN)
+)
+echo [ERROR] Cannot access network.
+pause
+exit /b 1
+:RUN
+echo Refreshing douyin dashboard data...
+python "%~dp0\u751f成看板数据.py"
+if not errorlevel 1 (
+  echo Pushing to GitHub...
+  git add -A
+  git commit -m "auto: data update" >nul 2>&1
+  git push
+  if not errorlevel 1 (echo Done!) else (echo [WARN] Git push failed.)
+) else (
+  echo [ERROR] Script failed
+  pause
+)
 pause

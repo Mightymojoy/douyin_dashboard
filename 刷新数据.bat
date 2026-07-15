@@ -17,6 +17,8 @@ python "生成看板数据.py"
 if errorlevel 1 goto :FAIL
 set "GIT=C:\Program Files\Git\cmd\git.exe"
 if not exist "%GIT%" (echo [WARN] Git not found, skip push. & goto :END)
+echo Syncing with GitHub...
+"%GIT%" pull --rebase --autostash >nul 2>&1
 echo Pushing to GitHub...
 "%GIT%" add -A
 "%GIT%" commit -m "auto: data update" >nul 2>&1

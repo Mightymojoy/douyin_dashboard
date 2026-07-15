@@ -15,8 +15,9 @@ exit /b 1
 echo Refreshing douyin dashboard data...
 python "生成看板数据.py"
 if errorlevel 1 goto :FAIL
+copy /Y "douyin_dashboard_embedded.html" "index.html" >nul 2>&1
 set "GIT=C:\Program Files\Git\cmd\git.exe"
-if not exist "%GIT%" (echo [WARN] Git not found, skip push. & goto :END)
+if not exist "%GIT%" echo [WARN] Git not found, skip push. & goto :END
 set GIT_TERMINAL_PROMPT=0
 echo Pushing to GitHub...
 "%GIT%" rebase --abort >nul 2>&1

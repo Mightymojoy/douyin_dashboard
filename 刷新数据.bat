@@ -17,13 +17,13 @@ python "生成看板数据.py"
 if errorlevel 1 goto :FAIL
 set "GIT=C:\Program Files\Git\cmd\git.exe"
 if not exist "%GIT%" (echo [WARN] Git not found, skip push. & goto :END)
-echo Syncing with GitHub...
-"%GIT%" pull --rebase --autostash >nul 2>&1
+set GIT_TERMINAL_PROMPT=0
 echo Pushing to GitHub...
 "%GIT%" add -A
 "%GIT%" commit -m "auto: data update" >nul 2>&1
+"%GIT%" pull --rebase --autostash >nul 2>&1
 "%GIT%" push
-if not errorlevel 1 (echo Done!) else (echo [WARN] Git push failed.)
+if not errorlevel 1 (echo Done!) else echo [WARN] Git push failed.
 goto :END
 :FAIL
 echo [ERROR] Script failed & pause

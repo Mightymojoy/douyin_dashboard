@@ -20,12 +20,11 @@ set "GIT=C:\Program Files\Git\cmd\git.exe"
 if not exist "%GIT%" echo [WARN] Git not found, skip push. & goto :END
 set GIT_TERMINAL_PROMPT=0
 echo Pushing to GitHub...
-"%GIT%" rebase --abort >nul 2>&1
-"%GIT%" fetch origin 2>nul
-"%GIT%" checkout -B master origin/master 2>nul
+"%GIT%" fetch origin 2>&1
+"%GIT%" checkout -B master origin/master 2>&1
 "%GIT%" add -A
 "%GIT%" commit -m "auto: data update" --allow-empty >nul 2>&1
-"%GIT%" push -u origin master
+"%GIT%" push -u origin master 2>&1
 if not errorlevel 1 (echo Done!) else echo [WARN] Git push failed.
 goto :END
 :FAIL

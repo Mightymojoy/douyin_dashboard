@@ -15,14 +15,14 @@ exit /b 1
 echo Refreshing douyin dashboard data...
 python "生成看板数据.py"
 if not errorlevel 1 (
-  where git >nul 2>&1
-  if not errorlevel 1 (
+  set "GIT=C:\Program Files\Git\cmd\git.exe"
+  if exist "%GIT%" (
     echo Pushing to GitHub...
-    git add -A
-    git commit -m "auto: data update" >nul 2>&1
-    git push
+    "%GIT%" add -A
+    "%GIT%" commit -m "auto: data update" >nul 2>&1
+    "%GIT%" push
     if not errorlevel 1 (echo Done!) else (echo [WARN] Git push failed.)
-  ) else (echo [WARN] Git not installed, skip push.)
+  ) else (echo [WARN] Git not found, skip push.)
 ) else (echo [ERROR] Script failed & pause)
 :END
 pause

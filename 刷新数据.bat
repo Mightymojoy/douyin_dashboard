@@ -13,7 +13,7 @@ pause
 exit /b 1
 :RUN
 echo Refreshing douyin dashboard data...
-python "%~dp0\u751f成看板数据.py"
+python "生成看板数据.py"
 if not errorlevel 1 (
   echo Pushing to GitHub...
   git add -A

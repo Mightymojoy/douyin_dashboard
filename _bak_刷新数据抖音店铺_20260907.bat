@@ -13,7 +13,7 @@ pause
 exit /b 1
 
 :RUN
-set "PY=C:\Users\QwQ\.workbuddy\binaries\python\envs\default\Scripts\python.exe"
+set "PY=C:\Users\QwQ\.workbuddy\binaries\python\versions\3.13.12\python.exe"
 if not exist "%PY%" (
   echo [ERROR] Python not found: %PY%
   pause

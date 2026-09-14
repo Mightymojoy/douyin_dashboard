@@ -291,14 +291,14 @@ tr:nth-child(even) td{background:rgba(0,0,0,.015)}
     <span class="utl-dot ok"></span>
     <span class="utl-tag ok">更新成功</span>
     <span class="utl-sep">·</span>
-    <span class="utl-time">09-14 13:47</span>
+    <span class="utl-time">09-14 13:49</span>
     <span class="utl-sep">·</span>
     <span class="utl-note">数据更新时间轴</span>
     <button class="utl-toggle" onclick="document.querySelector('.utl-history').classList.toggle('show')">历史记录 ▾</button>
   </div>
   <div class="utl-history">
     <div class="utl-hd">最近更新记录</div>
-    <div class='utl-row'><span class='utl-dot ok'></span><span class='utl-d'>2026-09-14 13:47:47</span><span class='utl-s ok'>✓</span><span class='utl-n'>抖音店铺看板数据更新</span></div>
+    <div class='utl-row'><span class='utl-dot ok'></span><span class='utl-d'>2026-09-14 13:49:30</span><span class='utl-s ok'>✓</span><span class='utl-n'>抖音店铺看板数据更新</span></div>
 <div class='utl-row'><span class='utl-dot ok'></span><span class='utl-d'>2026-09-07 14:16:13</span><span class='utl-s ok'>✓</span><span class='utl-n'>抖音店铺看板数据更新</span></div>
 <div class='utl-row'><span class='utl-dot ok'></span><span class='utl-d'>2026-08-31 11:37:20</span><span class='utl-s ok'>✓</span><span class='utl-n'>抖音店铺看板数据更新</span></div>
 <div class='utl-row'><span class='utl-dot ok'></span><span class='utl-d'>2026-08-24 12:08:11</span><span class='utl-s ok'>✓</span><span class='utl-n'>抖音店铺看板数据更新</span></div>
@@ -313,7 +313,7 @@ tr:nth-child(even) td{background:rgba(0,0,0,.015)}
 <nav class="nav">
   <a class="nav-brand" href="#"><i data-lucide="bar-chart-3"></i><span>ITO · 抖音店铺数据看板</span></a>
   <div class="nav-right">
-    <span class="nav-time"><i data-lucide="clock"></i><span id="updateTime">数据更新于 2026-09-14 13:47</span></span>
+    <span class="nav-time"><i data-lucide="clock"></i><span id="updateTime">数据更新于 2026-09-14 13:49</span></span>
     <span class="nav-dot"></span>
     <span style="font-size:11px;color:var(--text-tertiary)">v1.0</span>
   </div>
@@ -683,7 +683,7 @@ Object.keys(D).forEach(sid=>{
   (D[sid].qianchuan||[]).forEach(q=>{QC_DATA.push({...q,shop:sid})});
 });
 
-const NOW = '2026-09-14 13:47';
+const NOW = '2026-09-14 13:49';
 document.getElementById('updateTime').textContent = '数据更新于 ' + NOW;
 
 // ============================================================

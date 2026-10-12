@@ -227,8 +227,21 @@ if script_tag in html_content:
         now_str = datetime.now().strftime('%Y-%m-%d %H:%M')
         html_content = html_content.replace('value="2026-06-01"', f'value="{min_date}"', 1)
         html_content = html_content.replace('value="2026-07-07"', f'value="{max_date}"', 1)
+        # [FIX 20261012] 旧逻辑只替换了 input 的 value，没同步 JS state.start，
+        # 导致界面显示 min_date、实际筛选仍用硬编码 '2026-06-01'（界面与实际不一致，
+        # 拿"总 GMV"汇报会漏掉 1–5 月）。此处同步替换 state.start。
+        html_content = html_content.replace("start:'2026-06-01'", f"start:'{min_date}'", 1)
         html_content = html_content.replace('2026-07-07 10:00', now_str)
         html_content = html_content.replace("const NOW = '2026-07-07 10:00';", f"const NOW = '{now_str}';")
+        # [FIX 20261012] 构建后一致性断言：input 显示值必须等于 state.start，否则立即失败
+        import re as _re
+        _m_in = _re.search(r'id="startDate" value="([0-9]{4}-[0-9]{2}-[0-9]{2})"', html_content)
+        _m_st = _re.search(r"start:'([0-9]{4}-[0-9]{2}-[0-9]{2})'", html_content)
+        _v_in = _m_in.group(1) if _m_in else None
+        _v_st = _m_st.group(1) if _m_st else None
+        if _v_in is None or _v_st is None or _v_in != _v_st:
+            raise SystemExit(f'[FATAL] 起始日期不一致: input={_v_in} / state.start={_v_st} (min_date={min_date})')
+        print(f'起始日期一致性校验通过: input = state.start = {_v_in}')
     with open(HTML_OUT, 'w', encoding='utf-8') as f:
         f.write(html_content)
     print(f'已输出: {HTML_OUT} ({os.path.getsize(HTML_OUT)/1024:.0f} KB, 数据内嵌版)')

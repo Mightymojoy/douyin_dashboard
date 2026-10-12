@@ -33,8 +33,17 @@ copy /Y "%~dp0douyin_dashboard_embedded.html" "%~dp0index.html" >nul 2>&1
 if errorlevel 1 goto :FAIL
 
 echo [4/4] Pushing to GitHub...
-set "GIT=C:\Users\QwQ\.workbuddy\binaries\PortableGit\versions\1.2.0\mingw64\bin\git.exe"
-if not exist "%GIT%" (
+rem [FIX 20261012] PortableGit runtime probe - avoid hardcoded version dir.
+set "GITBASE=C:\Users\QwQ\.workbuddy\binaries\PortableGit\versions"
+set "GIT="
+if exist "%GITBASE%\current" for /f "usebackq delims=" %%V in ("%GITBASE%\current") do if not defined GIT if exist "%GITBASE%\%%V\mingw64\bin\git.exe" set "GIT=%GITBASE%\%%V\mingw64\bin\git.exe"
+if not defined GIT for /f "delims=" %%D in ('dir /b /ad /o-n "%GITBASE%" 2^>nul') do (
+    if not defined GIT if exist "%GITBASE%\%%D\mingw64\bin\git.exe" set "GIT=%GITBASE%\%%D\mingw64\bin\git.exe"
+)
+if not defined GIT for /f "delims=" %%P in ('where git 2^>nul') do (
+    if not defined GIT set "GIT=%%P"
+)
+if not defined GIT (
   echo [WARN] Git not found, skip push.
   goto :END
 )

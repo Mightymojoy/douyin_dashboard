@@ -12,3 +12,9 @@ dashboard_data.js
 # OS files
 Thumbs.db
 .DS_Store
+
+# Local backups (must not enter repo)
+_bak_*
+_bak*.*
+_backup_*/
+*.bak

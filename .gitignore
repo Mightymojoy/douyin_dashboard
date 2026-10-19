@@ -18,3 +18,6 @@ _bak_*
 _bak*.*
 _backup_*/
 *.bak
+
+# 时间戳备份（.bak_2026xxxx）不进仓库
+*.bak_*

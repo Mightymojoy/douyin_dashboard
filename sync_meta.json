@@ -1,8 +1,18 @@
 {
-  "status": "fail",
-  "source": "飞书同步",
-  "error": "[FATAL] 缺少 FEISHU_APP_ID / FEISHU_APP_SECRET",
-  "syncedAt": "2026-11-17 11:19",
+  "status": "ok",
+  "source": "飞书「抖音自营店铺数据源-新」",
+  "dataCutoff": "2026-11-17",
+  "dataEndInSource": "2026-11-30",
+  "dataStart": "2026-01-01",
+  "recordCount": 1002,
+  "perShop": {
+    "摩登新贵女": 334,
+    "轻熟质享客": 334,
+    "云端商务家": 334
+  },
+  "futureRecords": 39,
+  "syncedAt": "2026-11-17 11:21",
   "updatedBy": "GitHub Actions",
-  "note": "上一次同步未成功，以下数据仍是历史结果，请勿当作最新。"
+  "note": "页面运行时读取本文件，用于显示真实的数据截止时间与同步状态。",
+  "warning": "源表有 39 行日期晚于今天（预填行），已从数据截止日期中排除"
 }

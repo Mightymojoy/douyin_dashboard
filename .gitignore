@@ -1,6 +1,14 @@
-# Generated JSON/JS data files
-dashboard_data.json
+# Generated JS data file（页面已改为优先 fetch dashboard_data.json，此文件仅作旧引用兼容）
 dashboard_data.js
+
+# dashboard_data.json 必须进仓库：页面运行时 fetch 它，云端飞书同步只替换这一个文件，
+# 不必重建 2MB 的内嵌 HTML。原始 Excel 源表仍然不进仓库。
+# （2026-11-17 从忽略列表移出）
+
+# 飞书同步过程中生成的同构临时表
+_feishu_pull.xlsx
+sync_probe.json
+sync_error.json
 
 # Data source (sensitive)
 抖音自营店铺数据源.xlsx*

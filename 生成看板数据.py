@@ -1,8 +1,23 @@
-"""生成看板数据: 抖音自营店铺数据源.xlsx -> dashboard_data.json"""
-import pandas as pd, json, os
+"""生成看板数据: 抖音自营店铺数据源.xlsx -> dashboard_data.json
+
+支持 --src <路径> 覆盖数据源，供云端飞书同步（tools/feishu_sync_douyin.py）
+把飞书拉下来的数据写成同构临时 xlsx 后复用本脚本，避免口径二次实现。
+"""
+import pandas as pd, json, os, sys
 from datetime import datetime
 
-SRC = os.path.join(os.path.dirname(__file__), '抖音自营店铺数据源.xlsx')
+_DEFAULT_SRC = os.path.join(os.path.dirname(os.path.abspath(__file__)), '抖音自营店铺数据源.xlsx')
+
+def _resolve_src():
+    argv = sys.argv[1:]
+    for i, a in enumerate(argv):
+        if a == '--src' and i + 1 < len(argv):
+            return os.path.abspath(argv[i + 1])
+        if a.startswith('--src='):
+            return os.path.abspath(a.split('=', 1)[1])
+    return _DEFAULT_SRC
+
+SRC = _resolve_src()
 OUT = os.path.join(os.path.dirname(__file__), 'dashboard_data.json')
 
 SHOP_KEYS = ['摩登新贵女','轻熟质享客','云端商务家']

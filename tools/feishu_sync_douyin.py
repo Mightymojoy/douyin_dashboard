@@ -403,5 +403,58 @@ def main():
         do_sync(args)
 
 
+def write_fail_meta(reason):
+    """同步失败时也把原因落进 sync_meta.json。
+
+    实测 2026-11-17：缺 FEISHU_APP_ID 时脚本直接 SystemExit，meta 纹丝不动，
+    页面继续显示上一次的 status=ok。后果是「云端早就挂了，页面还说同步成功」，
+    比明确报错更危险。故在 __main__ 统一兜底，任何异常都写 fail meta。
+    """
+    prev_err = ""
+    try:
+        with open(META_PATH, encoding="utf-8") as f:
+            prev = json.load(f)
+        if prev.get("status") == "fail" and prev.get("error"):
+            prev_err = " | 前序原因: " + str(prev["error"])
+    except Exception:
+        pass
+    meta = {
+        "status": "fail",
+        "source": "飞书同步",
+        "error": (str(reason)[:400] + prev_err)[:600],
+        "syncedAt": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "updatedBy": os.environ.get("SYNC_ACTOR", "本地脚本"),
+        "note": "上一次同步未成功，以下数据仍是历史结果，请勿当作最新。",
+    }
+    try:
+        with open(META_PATH, "w", encoding="utf-8") as f:
+            json.dump(meta, f, ensure_ascii=False, indent=2)
+        print("[FAIL] 已写 sync_meta.json: %s" % meta["error"])
+    except Exception as e:
+        print("[WARN] 写 sync_meta 失败: %s" % e)
+
+
+def _run_guarded():
+    """--sync 模式下，任何非零退出都要留下失败痕迹后以非零码退出。"""
+    try:
+        main()
+    except SystemExit as e:
+        code = e.code
+        if isinstance(code, int):
+            if code != 0:
+                write_fail_meta("退出码 %d" % code)
+            raise
+        write_fail_meta(code or "未知原因")
+        raise SystemExit(1)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        write_fail_meta("%s: %s" % (type(e).__name__, e))
+        raise SystemExit(1)
+
+
 if __name__ == "__main__":
-    main()
+    if "--sync" in sys.argv:
+        _run_guarded()
+    else:
+        main()

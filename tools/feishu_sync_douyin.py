@@ -36,6 +36,10 @@ import urllib.request
 
 BASE = "https://open.feishu.cn/open-apis"
 DEFAULT_WIKI_TOKEN = "Uwq1w8rUEiloALkv0uBcXLxGn3f"
+# 文档号不是密钥，只是定位符。应用没有 wiki:wiki 权限时用它直连，
+# 免得为了「找文档」这一个动作额外申请一个 scope。
+DEFAULT_SPREADSHEET_TOKEN = "SOxdsxkiZhxYh2tq2uIc8wkDnvc"
+DEFAULT_DOC_TITLE = "抖音自营店铺数据源-新"
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 META_PATH = os.path.join(ROOT, "sync_meta.json")
@@ -115,12 +119,21 @@ def get_token(app_id, app_secret):
     return r["tenant_access_token"]
 
 
-def resolve_sheet_token(token, wiki_token):
-    """wiki 节点 → 电子表格 spreadsheetToken"""
+def resolve_sheet_token(token, wiki_token, fallback_st=None):
+    """wiki 节点 → 电子表格 spreadsheetToken
+
+    有 wiki:wiki 权限时走这里，能自动跟随文档改名/移动；
+    没有时（实测 cli_aa7104b0b93a9bb3 就是这种情况）回落到内置文档号，
+    只缺一个非必要的 scope，不该让整条同步失败。
+    """
     url = BASE + "/wiki/v2/spaces/get_node?" + urllib.parse.urlencode(
         {"token": wiki_token, "obj_type": "wiki"})
     r = _request(url, token)
     if r.get("code") != 0:
+        if fallback_st:
+            print("[WARN] wiki 节点解析失败(%s %s)，改用内置文档号 %s"
+                  % (r.get("code"), str(r.get("msg"))[:60], fallback_st))
+            return fallback_st, DEFAULT_DOC_TITLE, {}
         raise SystemExit("[FATAL] 读 wiki 节点失败: %s %s" % (r.get("code"), r.get("msg")))
     node = r["data"]["node"]
     if node.get("obj_type") != "sheet":
@@ -197,7 +210,7 @@ def check_header(rows, shop):
 
 def do_inspect(args):
     token = get_token(args.app_id, args.app_secret)
-    st, title, node = resolve_sheet_token(token, args.wiki_token)
+    st, title, node = resolve_sheet_token(token, args.wiki_token, args.spreadsheet_token)
     print("文档标题:", title)
     print("spreadsheetToken:", st)
     print("wiki 节点:", args.wiki_token, "| space_id:", node.get("space_id"))
@@ -230,16 +243,37 @@ def do_inspect(args):
 
 
 def build_rows(token, st, sheet_meta):
-    """拉一个店铺子表 → (数据行列表, 日期列表, 未来日期行数)"""
+    """拉一个店铺子表 → (合计行, 数据行列表, 日期列表, 未来日期行数)
+
+    ⚠️ 行位关系（实测 2026-11-17）：第1行标题、第2行空、第3行表头、**第4行合计**、第5行起为日数据。
+    合计行同样带日期（46023=2026-01-01）且金额是汇总值（摩登新贵女 940.9 万 vs 次日 9.1 万），
+    当成日数据会直接放大两个数量级。
+
+    合计行必须原样回写到临时表，因为 生成看板数据.py 是按「第4行=合计、第5行起=日数据」
+    的固定行位取数的；若临时表省掉合计行，生成脚本会再跳一行，把真实的第一天（2026-01-01）
+    一起丢掉 —— 这个偏差实测出现过：起始日期从 2026-01-01 变成 2026-01-02。
+    """
     rows = read_values(token, st, sheet_meta["sheet_id"], min(sheet_meta["rows"] or 400, MAX_ROWS))
     hi = check_header(rows, sheet_meta["title"])
+    total_row = list(rows[hi + 1])[:NCOLS] if len(rows) > hi + 1 else None
+    data_start = hi + 2
     today = datetime.date.today()
     data, dates, future = [], [], 0
-    for row in rows[hi + 1:]:
+    dropped = 0
+    for row in rows[data_start:]:
         r = list(row) + [None] * (NCOLS - len(row))
         r = r[:NCOLS]
         d = excel_serial_to_date(r[0])
         if d is None or str(d).strip() == "":
+            continue
+        # 汇总行识别：源表每月月初插一行月度汇总（日期与当月 1 日相同、金额是整月合计），
+        # 其「直播场次」列固定填 "-"，而日数据是 "9：30-24：30" 这类时间段文本；
+        # 时长也是整月量级（24067 分钟）对日数据（约 850 分钟）。
+        # 不剔除会把整月 GMV 叠加到当月 1 日，导致每月 1 日虚高数十倍。
+        # 本地 Excel 版之所以「看起来没事」，是这些行被 pandas 读成了 1970-01-01，
+        # 再被前端日期筛选顺带排除 —— 属于被掩盖的缺陷，不能复刻。
+        if str(r[34]).strip() == "-":
+            dropped += 1
             continue
         r[0] = d
         data.append(r)
@@ -248,7 +282,12 @@ def build_rows(token, st, sheet_meta):
             dates.append(dd.strftime("%Y-%m-%d"))
             if dd > today:
                 future += 1
-    return data, dates, future
+    if dropped:
+        print("[INFO] %s: 剔除 %d 行月度/总计汇总行（直播场次列为 '-'）"
+              % (sheet_meta["title"], dropped))
+    if not data:
+        raise SystemExit("[FATAL] %s: 剔除汇总行后无任何日数据，结构可能已变动" % sheet_meta["title"])
+    return total_row, data, dates, future
 
 
 def do_sync(args):
@@ -256,7 +295,7 @@ def do_sync(args):
     from openpyxl.styles import Alignment
 
     token = get_token(args.app_id, args.app_secret)
-    st, title, node = resolve_sheet_token(token, args.wiki_token)
+    st, title, node = resolve_sheet_token(token, args.wiki_token, args.spreadsheet_token)
     sheets = list_sheets(token, st)
     by_title = {s["title"]: s for s in sheets}
     missing = [k for k in SHOP_KEYS if k not in by_title]
@@ -272,18 +311,20 @@ def do_sync(args):
     per_shop = {}
 
     for shop in SHOP_KEYS:
-        rows, dates, future = build_rows(token, st, by_title[shop])
+        total_row, rows, dates, future = build_rows(token, st, by_title[shop])
         ws = wb.create_sheet(shop)
         ws.append(["%s店铺维度" % shop])
         ws.append([None] * NCOLS)
         ws.append(list(EXPECTED_HEADER))
+        # 合计行原位回写，保持与源表逐行同构（生成脚本依赖这个行位）
+        ws.append(total_row if total_row else [None] * NCOLS)
         for r in rows:
             ws.append(r)
         all_dates.extend(dates)
         future_total += future
         per_shop[shop] = len(rows)
         total += len(rows)
-        print("[OK] %s: %d 行" % (shop, len(rows)))
+        print("[OK] %s: %d 行（合计行已保留占位）" % (shop, len(rows)))
 
     wb.save(TMP_XLSX)
     print("[OK] 临时同构表: %s (%.1f KB)" % (TMP_XLSX, os.path.getsize(TMP_XLSX) / 1024))
@@ -344,6 +385,10 @@ def main():
     ap.add_argument("--app-secret", default=os.environ.get("FEISHU_APP_SECRET", "").strip())
     ap.add_argument("--wiki-token",
                     default=os.environ.get("FEISHU_WIKI_TOKEN", "").strip() or DEFAULT_WIKI_TOKEN)
+    ap.add_argument("--spreadsheet-token",
+                    default=os.environ.get("FEISHU_SPREADSHEET_TOKEN", "").strip()
+                    or DEFAULT_SPREADSHEET_TOKEN,
+                    help="直接指定电子表格 token；无 wiki:wiki 权限时用它直连")
     args = ap.parse_args()
 
     if not args.inspect and not args.sync:

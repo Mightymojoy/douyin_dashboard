@@ -1,0 +1,73 @@
+name: sync-feishu
+
+# 抖音店铺看板 · 飞书数据同步
+# 浏览器点击「同步飞书数据」→ 本工作流 → 读飞书「抖音自营店铺数据源-新」
+# → 还原同构表 → 复用 生成看板数据.py 的既有口径 → 提交 dashboard_data.json + sync_meta.json
+#
+# 为什么不在浏览器里直连飞书：飞书 App Secret 不能下发到前端，
+# 否则任何拿到页面的人都能读全店财务数据。密钥只存在于 Actions Secrets。
+#
+# 关于定时：schedule 只读仓库默认分支（main）上的工作流文件，
+# 而看板代码与发布都在 master。第一阶段只启用「手动点击」，
+# 待手动链路跑通并验证后，再决定是否把本文件同步一份到 main 以启用定时。
+
+on:
+  workflow_dispatch:
+  # 改同步脚本/生成口径时自动跑一次，改完立刻看到真实结果，省掉「改完还要人点一下」的往返
+  push:
+    branches: [master]
+    paths:
+      - 'tools/feishu_sync_douyin.py'
+      - '生成看板数据.py'
+      - '.github/workflows/sync-feishu.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-feishu-douyin
+  # 同一时刻只该有一次同步；旧运行卡住时，新代码推上来应立即顶替
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: 检出 master
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          fetch-depth: 1
+
+      - name: 准备 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 安装依赖
+        run: pip install --quiet pandas openpyxl
+
+      - name: 同步飞书数据
+        env:
+          FEISHU_APP_ID: ${{ secrets.FEISHU_APP_ID }}
+          FEISHU_APP_SECRET: ${{ secrets.FEISHU_APP_SECRET }}
+          FEISHU_WIKI_TOKEN: ${{ secrets.FEISHU_WIKI_TOKEN }}
+          SYNC_ACTOR: GitHub Actions
+          PYTHONIOENCODING: utf-8
+        run: python tools/feishu_sync_douyin.py --sync
+
+      - name: 提交并推送
+        # 必须 always()：同步失败时 sync_meta.json 里的原因也要推上去，
+        # 页面才能直接显示失败原因，不必让人去 Actions 翻日志。
+        if: always()
+        run: |
+          git config user.name "ito-sync-bot"
+          git config user.email "ito-sync-bot@users.noreply.github.com"
+          git add dashboard_data.json sync_meta.json
+          if git diff --cached --quiet; then
+            echo "数据无变化，不提交"
+            exit 0
+          fi
+          git commit -m "sync: 飞书店铺数据 $(TZ=Asia/Shanghai date +%Y-%m-%d)"
+          git push origin HEAD:master

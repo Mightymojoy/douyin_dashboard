@@ -2,7 +2,7 @@
   "status": "fail",
   "source": "飞书同步",
   "error": "[FATAL] 缺少 FEISHU_APP_ID / FEISHU_APP_SECRET",
-  "syncedAt": "2026-11-17 11:09",
+  "syncedAt": "2026-11-17 11:19",
   "updatedBy": "GitHub Actions",
   "note": "上一次同步未成功，以下数据仍是历史结果，请勿当作最新。"
 }

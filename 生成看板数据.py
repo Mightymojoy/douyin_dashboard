@@ -4,7 +4,16 @@
 把飞书拉下来的数据写成同构临时 xlsx 后复用本脚本，避免口径二次实现。
 """
 import pandas as pd, json, os, sys
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
+
+# [FIX 20261117] GitHub Actions runner 是 UTC，直接用 datetime.now() 会把
+# 「数据更新于」写成比北京时间早 8 小时的值（实测云端写成 03:03，本地是 11:03）。
+# 中国无夏令时，固定 +8 即可；不用 zoneinfo 是为了不依赖 Windows 上常缺的 tzdata。
+_CN_TZ = timezone(timedelta(hours=8))
+
+
+def now_cn():
+    return datetime.now(_CN_TZ).strftime('%Y-%m-%d %H:%M')
 
 _DEFAULT_SRC = os.path.join(os.path.dirname(os.path.abspath(__file__)), '抖音自营店铺数据源.xlsx')
 
@@ -239,7 +248,7 @@ if script_tag in html_content:
     if all_dates:
         min_date = min(all_dates)
         max_date = max(all_dates)
-        now_str = datetime.now().strftime('%Y-%m-%d %H:%M')
+        now_str = now_cn()
         html_content = html_content.replace('value="2026-06-01"', f'value="{min_date}"', 1)
         html_content = html_content.replace('value="2026-07-07"', f'value="{max_date}"', 1)
         # [FIX 20261012] 旧逻辑只替换了 input 的 value，没同步 JS state.start，

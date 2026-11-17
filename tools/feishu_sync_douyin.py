@@ -50,6 +50,14 @@ SHOP_KEYS = ["摩登新贵女", "轻熟质享客", "云端商务家"]
 NCOLS = 80
 MAX_ROWS = 600
 
+# [FIX 20261117] runner 是 UTC。实测云端写入 syncedAt=03:03，而本地是 11:03，
+# 页面会把「数据更新于」显示成凌晨。中国无夏令时，固定 UTC+8，不依赖 tzdata。
+_CN_TZ = datetime.timezone(datetime.timedelta(hours=8))
+
+
+def now_cn():
+    return datetime.datetime.now(_CN_TZ).strftime("%Y-%m-%d %H:%M")
+
 # 结构哨兵：本地 Excel「摩登新贵女」第 3 行实测表头（80 列，已去除换行与空格）。
 # 飞书源表与之不一致时立刻失败，避免列位错移后算出全错的数。
 EXPECTED_HEADER = [
@@ -344,7 +352,7 @@ def do_sync(args):
             "status": "fail",
             "source": "飞书「%s」" % title,
             "error": "生成看板数据.py 失败: " + (" / ".join(err[-3:]) if err else "未知错误"),
-            "syncedAt": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+            "syncedAt": now_cn(),
             "updatedBy": os.environ.get("SYNC_ACTOR", "本地脚本"),
         }
         with open(META_PATH, "w", encoding="utf-8") as f:
@@ -366,7 +374,7 @@ def do_sync(args):
         "recordCount": total,
         "perShop": per_shop,
         "futureRecords": future_total,
-        "syncedAt": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "syncedAt": now_cn(),
         "updatedBy": os.environ.get("SYNC_ACTOR", "本地脚本"),
         "note": "页面运行时读取本文件，用于显示真实的数据截止时间与同步状态。",
     }
@@ -422,7 +430,7 @@ def write_fail_meta(reason):
         "status": "fail",
         "source": "飞书同步",
         "error": (str(reason)[:400] + prev_err)[:600],
-        "syncedAt": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "syncedAt": now_cn(),
         "updatedBy": os.environ.get("SYNC_ACTOR", "本地脚本"),
         "note": "上一次同步未成功，以下数据仍是历史结果，请勿当作最新。",
     }

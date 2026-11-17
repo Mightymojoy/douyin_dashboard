@@ -419,17 +419,23 @@ def write_fail_meta(reason):
     比明确报错更危险。故在 __main__ 统一兜底，任何异常都写 fail meta。
     """
     prev_err = ""
+    cur = str(reason).strip()
     try:
         with open(META_PATH, encoding="utf-8") as f:
             prev = json.load(f)
         if prev.get("status") == "fail" and prev.get("error"):
-            prev_err = " | 前序原因: " + str(prev["error"])
+            # 剥掉上一次已经附加过的「前序原因」，否则连续失败会变成
+            # A | 前序原因: A | 前序原因: A …（实测 2026-11-17 云端两次失败即复现）
+            prior = str(prev["error"]).split(" | 前序原因: ")[0].strip()
+            # 本次原因与上次相同（或互相包含）就不重复记录，只保留关键差异
+            if prior and prior != cur and prior not in cur and cur not in prior:
+                prev_err = " | 前序原因: " + prior
     except Exception:
         pass
     meta = {
         "status": "fail",
         "source": "飞书同步",
-        "error": (str(reason)[:400] + prev_err)[:600],
+        "error": (cur[:400] + prev_err)[:600],
         "syncedAt": now_cn(),
         "updatedBy": os.environ.get("SYNC_ACTOR", "本地脚本"),
         "note": "上一次同步未成功，以下数据仍是历史结果，请勿当作最新。",

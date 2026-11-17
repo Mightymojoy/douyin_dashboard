@@ -247,10 +247,23 @@ if script_tag in html_content:
                 all_dates.append(r['date'])
     if all_dates:
         min_date = min(all_dates)
-        max_date = max(all_dates)
+        # 结束日期取「真实数据截止」而不是源表最大日期。
+        # 源表常提前预填未来日期（实测 11-17 已填到 11-30），若按最大日期当结束日，
+        # 趋势图尾部会挂 13 天全 0 空档，看起来像业绩断崖，实际是尚未发生的日子。
+        # 这里同时修掉一个隐藏不一致：过去静态 input 写 max(all_dates)（11-30），
+        # 而 JS state.end 取构建当天，两者本就不同步，只是被运行时重算掩盖了。
+        _today = now_cn()[:10]
+        _past = [d for d in all_dates if d <= _today]
+        max_date = max(_past) if _past else max(all_dates)
+        if max_date != max(all_dates):
+            print(f'结束日期按真实数据截止: {max_date}（源表最大日期 {max(all_dates)}，'
+                  f'{(datetime.strptime(max(all_dates), "%Y-%m-%d").date() - datetime.strptime(max_date, "%Y-%m-%d").date()).days} 天为预填空档）')
         now_str = now_cn()
         html_content = html_content.replace('value="2026-06-01"', f'value="{min_date}"', 1)
         html_content = html_content.replace('value="2026-07-07"', f'value="{max_date}"', 1)
+        # state.end 原本取构建当天（end:NOW.slice(0,10)），数据滞后时会比真实截止更晚，
+        # 与静态 input 又不一致。这里显式写入真实截止，让静态值与筛选状态一致。
+        html_content = html_content.replace('end:NOW.slice(0,10)', f"end:'{max_date}'", 1)
         # [FIX 20261012] 旧逻辑只替换了 input 的 value，没同步 JS state.start，
         # 导致界面显示 min_date、实际筛选仍用硬编码 '2026-06-01'（界面与实际不一致，
         # 拿"总 GMV"汇报会漏掉 1–5 月）。此处同步替换 state.start。
@@ -266,6 +279,15 @@ if script_tag in html_content:
         if _v_in is None or _v_st is None or _v_in != _v_st:
             raise SystemExit(f'[FATAL] 起始日期不一致: input={_v_in} / state.start={_v_st} (min_date={min_date})')
         print(f'起始日期一致性校验通过: input = state.start = {_v_in}')
+        # 结束日期同样断言：input 显示值、state.end、期望的真实截止三者必须一致，
+        # 否则会出现「界面显示到 11-30、实际只统计到 11-17」这类看不出来的错位。
+        _m_ein = _re.search(r'id="endDate" value="([0-9]{4}-[0-9]{2}-[0-9]{2})"', html_content)
+        _m_est = _re.search(r"end:'([0-9]{4}-[0-9]{2}-[0-9]{2})'", html_content)
+        _v_ein = _m_ein.group(1) if _m_ein else None
+        _v_est = _m_est.group(1) if _m_est else None
+        if _v_ein is None or _v_est is None or _v_ein != _v_est or _v_ein != max_date:
+            raise SystemExit(f'[FATAL] 结束日期不一致: input={_v_ein} / state.end={_v_est} / expect={max_date}')
+        print(f'结束日期一致性校验通过: input = state.end = {_v_ein}')
     with open(HTML_OUT, 'w', encoding='utf-8') as f:
         f.write(html_content)
     print(f'已输出: {HTML_OUT} ({os.path.getsize(HTML_OUT)/1024:.0f} KB, 数据内嵌版)')

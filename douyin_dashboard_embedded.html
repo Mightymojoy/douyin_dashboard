@@ -313,7 +313,7 @@ tr:nth-child(even) td{background:rgba(0,0,0,.015)}
         <p class="hint" id="syncPanelStatus"></p>
       </div>
     </div>
-    <span class="nav-time"><i data-lucide="clock"></i><span id="updateTime">数据更新于 2026-11-17 11:06</span></span>
+    <span class="nav-time"><i data-lucide="clock"></i><span id="updateTime">数据更新于 2026-11-17 11:30</span></span>
     <span class="nav-dot"></span>
     <span style="font-size:11px;color:var(--text-tertiary)">v1.0</span>
   </div>
@@ -345,7 +345,7 @@ tr:nth-child(even) td{background:rgba(0,0,0,.015)}
     <span class="filter-label">日期</span>
     <input type="date" class="date-input" id="startDate" value="2026-01-01">
     <span class="date-connector">至</span>
-    <input type="date" class="date-input" id="endDate" value="2026-11-30">
+    <input type="date" class="date-input" id="endDate" value="2026-11-17">
   </div>
 
   <div class="filter-divider"></div>
@@ -683,7 +683,7 @@ Object.keys(D).forEach(sid=>{
   (D[sid].qianchuan||[]).forEach(q=>{QC_DATA.push({...q,shop:sid})});
 });
 
-const NOW = '2026-11-17 11:06';
+const NOW = '2026-11-17 11:30';
 document.getElementById('updateTime').textContent = '数据更新于 ' + NOW;
 
 // ============================================================
@@ -745,7 +745,7 @@ function filterByDate(data,start,end,dateKey='date'){
 // ============================================================
 const state = {
   activeTab:'overview',activeShop:'mdnjg',gran:'day',compareOn:false,
-  start:'2026-01-01',end:NOW.slice(0,10),cStart:'2026-05-01',cEnd:'2026-05-31',
+  start:'2026-01-01',end:'2026-11-17',cStart:'2026-05-01',cEnd:'2026-05-31',
   shopFilter:'all',showAvgLine:true,showTop3:true,showTable:true,
   shopPage:1,ssPage:1,qcPage:1,pageSize:15,
   shopKpiSelected:['gmv','gsv','subsidy','orderBuyers','refundRate','avgPrice','feeRatio','yoy'],
@@ -2583,6 +2583,15 @@ async function loadRemoteData(version){
   }catch(e){ return false; }
 }
 
+// 真实数据截止日（已排除源表预填的未来日期），由 sync_meta.json 的 dataCutoff 提供
+let realCutoff = '';
+
+// 北京时间「今天」。不能用 new Date().toISOString() —— 那是 UTC，
+// 在北京时间 08:00 之前会算成前一天，把今天的数据误判为未来数据。
+function todayCN(){
+  return new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
+}
+
 // 外置数据可能比内嵌模板更新，日期区间要跟着重算，否则会漏掉新增日期
 function applyDateRangeFromData(){
   const dates = [];
@@ -2593,7 +2602,19 @@ function applyDateRangeFromData(){
   });
   if(!dates.length) return;
   dates.sort();
-  const mn = dates[0], mx = dates[dates.length - 1];
+  const mn = dates[0];
+
+  // 结束日期取「真实数据截止」而不是源表最大日期。
+  // 源表常提前预填未来日期（实测 11-17 就填到了 11-30），若按最大日期当结束日，
+  // 趋势图尾部会挂 13 天全 0 空档，看起来像业绩断崖，实际是没到的日子。
+  // 优先用 sync_meta.dataCutoff（云端已算好并剔除未来行），并校验它确实存在于数据里，
+  // 避免 meta 与数据不同步时算出一个不存在的日期。
+  const today = todayCN();
+  const past = dates.filter(function(d){ return d <= today; });
+  let mx = mn;
+  if(realCutoff && past.indexOf(realCutoff) >= 0) mx = realCutoff;
+  else if(past.length) mx = past[past.length - 1];
+
   const elS = document.getElementById('startDate');
   const elE = document.getElementById('endDate');
   if(elS) elS.value = mn;
@@ -2614,6 +2635,7 @@ function rerenderAll(){
 
 function applySyncMeta(meta){
   if(!meta) return;
+  if(meta.dataCutoff) realCutoff = String(meta.dataCutoff);
   const timeEl = document.getElementById('updateTime');
   if(timeEl){
     const t = meta.syncedAt || '';
@@ -2634,9 +2656,10 @@ function applySyncMeta(meta){
   warnEl.classList.remove('err');
   const n = Number(meta.futureRecords || 0);
   if(!n){ warnEl.classList.remove('show'); warnEl.textContent = ''; warnEl.title = ''; warnEl.onclick = null; return; }
-  warnEl.textContent = '源表 ' + n + ' 行日期异常';
-  warnEl.title = meta.warning || ('源表有 ' + n + ' 行日期晚于今天，未计入数据截止日期');
-  warnEl.onclick = function(){ showSyncToast(warnEl.title, 'info', 10000); };
+  warnEl.textContent = '源表 ' + n + ' 行未来日期';
+  warnEl.title = (meta.warning || ('源表有 ' + n + ' 行日期晚于今天（预填行），未计入数据截止日期')) +
+    '。图表默认结束日期已按真实数据截止日设置，这些行不影响图表；源表数据不做删除，仅作提示。';
+  warnEl.onclick = function(){ showSyncToast(warnEl.title, 'info', 12000); };
   warnEl.classList.add('show');
 }
 

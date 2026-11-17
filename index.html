@@ -313,7 +313,7 @@ tr:nth-child(even) td{background:rgba(0,0,0,.015)}
         <p class="hint" id="syncPanelStatus"></p>
       </div>
     </div>
-    <span class="nav-time"><i data-lucide="clock"></i><span id="updateTime">数据更新于 2026-11-17 10:30</span></span>
+    <span class="nav-time"><i data-lucide="clock"></i><span id="updateTime">数据更新于 2026-11-17 10:32</span></span>
     <span class="nav-dot"></span>
     <span style="font-size:11px;color:var(--text-tertiary)">v1.0</span>
   </div>
@@ -683,7 +683,7 @@ Object.keys(D).forEach(sid=>{
   (D[sid].qianchuan||[]).forEach(q=>{QC_DATA.push({...q,shop:sid})});
 });
 
-const NOW = '2026-11-17 10:30';
+const NOW = '2026-11-17 10:32';
 document.getElementById('updateTime').textContent = '数据更新于 ' + NOW;
 
 // ============================================================
@@ -2350,10 +2350,21 @@ const SYNC_CFG = {
   api: 'https://api.github.com'
 };
 const TOKEN_KEY = 'ito_douyin_dashboard_gh_token';
+// 与主播看板同在 mightymojoy.github.io 源下，localStorage 共享；
+// 若那边已配过令牌，这里直接沿用，省掉重复配置一次。
+const TOKEN_FALLBACK_KEYS = ['ito_live_dashboard_gh_token'];
 let pollTimer = null;
 
 function syncToken(){
-  try{ return (localStorage.getItem(TOKEN_KEY) || '').trim(); }catch(e){ return ''; }
+  try{
+    const own = (localStorage.getItem(TOKEN_KEY) || '').trim();
+    if(own) return own;
+    for(let i = 0; i < TOKEN_FALLBACK_KEYS.length; i++){
+      const v = (localStorage.getItem(TOKEN_FALLBACK_KEYS[i]) || '').trim();
+      if(v) return v;
+    }
+    return '';
+  }catch(e){ return ''; }
 }
 
 function showSyncToast(msg, kind, ms){

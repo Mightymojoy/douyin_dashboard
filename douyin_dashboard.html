@@ -673,18 +673,31 @@ function seedDateStr(d){return d.toISOString().slice(0,10)}
 function addDays(d,n){let r=new Date(d);r.setDate(r.getDate()+n);return r}
 
 // Load real data from dashboard_data.js
-const D = window.DASHBOARD_DATA || {};
+// [FIX 20261123] 这里原来是「一次性快照」：SHOP_DATA / SESSION_DATA / QC_DATA 在脚本
+// 解析期从内嵌数据深拷贝一份，而远端加载只做 window.DASHBOARD_DATA = d 的重新赋值。
+// 后果：刷新页面永远只换时间戳，图表/表格/KPI 全部停留在内嵌快照上（实测停在 11-17，
+// 11-18 之后 GMV 全 0、只剩「25年同期GSV」有值，看起来像「数据没刷新」）。
+// 改为抽成 rebuildDerived()，远端数据加载成功后回灌这三个派生数组。
 const SHOP_DATA = {};
 const SESSION_DATA = [];
 const QC_DATA = [];
-Object.keys(D).forEach(sid=>{
-  SHOP_DATA[sid] = (D[sid].shop||[]).map(d=>({...d}));
-  (D[sid].sessions||[]).forEach(s=>{SESSION_DATA.push({...s,shop:sid,anchor:''})});
-  (D[sid].qianchuan||[]).forEach(q=>{QC_DATA.push({...q,shop:sid})});
-});
+
+function rebuildDerived(src){
+  const S = src || window.DASHBOARD_DATA || {};
+  Object.keys(SHOP_DATA).forEach(function(k){ delete SHOP_DATA[k]; });
+  SESSION_DATA.length = 0;
+  QC_DATA.length = 0;
+  Object.keys(S).forEach(function(sid){
+    SHOP_DATA[sid] = (S[sid].shop||[]).map(function(d){ return {...d}; });
+    (S[sid].sessions||[]).forEach(function(s){ SESSION_DATA.push({...s, shop:sid, anchor:''}); });
+    (S[sid].qianchuan||[]).forEach(function(q){ QC_DATA.push({...q, shop:sid}); });
+  });
+}
+rebuildDerived(window.DASHBOARD_DATA);
 
 const NOW = '2026-07-07 10:00';
-document.getElementById('updateTime').textContent = '数据更新于 ' + NOW;
+const EMBED_AT = NOW;
+document.getElementById('updateTime').textContent = '数据更新于 ' + NOW + '（内嵌快照）';
 
 // ============================================================
 //  2. UTILITY
@@ -2574,13 +2587,22 @@ async function loadRemoteData(version){
   try{
     const ver = version ? String(version).replace(/[^0-9]/g,'') : String(Date.now());
     const res = await fetch('./dashboard_data.json?v=' + ver, { cache:'no-store' });
-    if(!res.ok) return false;
+    if(!res.ok){ window.__DATA_ERR = 'dashboard_data.json HTTP ' + res.status; return false; }
     const d = await res.json();
-    if(!d || !d.mdnjg || !Array.isArray(d.mdnjg.shop) || !d.mdnjg.shop.length) return false;
+    if(!d || !d.mdnjg || !Array.isArray(d.mdnjg.shop) || !d.mdnjg.shop.length){
+      window.__DATA_ERR = 'dashboard_data.json 结构异常（缺 mdnjg.shop）';
+      return false;
+    }
     window.DASHBOARD_DATA = d;
+    // [FIX 20261123] 必须回灌派生数组，否则远端数据取到了也不会被任何图表/表格使用
+    rebuildDerived(d);
     window.__DATA_SRC = 'remote';
+    window.__DATA_ERR = '';
     return true;
-  }catch(e){ return false; }
+  }catch(e){
+    window.__DATA_ERR = (e && e.message) ? e.message : String(e);
+    return false;
+  }
 }
 
 // 真实数据截止日（已排除源表预填的未来日期），由 sync_meta.json 的 dataCutoff 提供
@@ -2609,10 +2631,21 @@ function applyDateRangeFromData(){
   // 趋势图尾部会挂 13 天全 0 空档，看起来像业绩断崖，实际是没到的日子。
   // 优先用 sync_meta.dataCutoff（云端已算好并剔除未来行），并校验它确实存在于数据里，
   // 避免 meta 与数据不同步时算出一个不存在的日期。
+  // [FIX 20261123] 再加一层「当天是否真有数据」的校验：dataCutoff 按「日期<=今天」算出，
+  // 但当天数据往往还没结算（实测 11-23 三店 GMV 全为 0），若照用仍会在尾部挂一天 0，
+  // 看上去就像「又没刷新」。故只认「合计 GMV>0」的日期。
   const today = todayCN();
   const past = dates.filter(function(d){ return d <= today; });
+  const gmvByDate = {};
+  Object.keys(window.DASHBOARD_DATA || {}).forEach(function(sid){
+    ((window.DASHBOARD_DATA[sid] || {}).shop || []).forEach(function(r){
+      if(r && r.date) gmvByDate[r.date] = (gmvByDate[r.date] || 0) + (Number(r.gmv) || 0);
+    });
+  });
+  const nonEmpty = past.filter(function(d){ return (gmvByDate[d] || 0) > 0; });
   let mx = mn;
-  if(realCutoff && past.indexOf(realCutoff) >= 0) mx = realCutoff;
+  if(realCutoff && nonEmpty.indexOf(realCutoff) >= 0) mx = realCutoff;
+  else if(nonEmpty.length) mx = nonEmpty[nonEmpty.length - 1];
   else if(past.length) mx = past[past.length - 1];
 
   const elS = document.getElementById('startDate');
@@ -2666,22 +2699,60 @@ function applySyncMeta(meta){
 // ============================================================
 //  11. INIT
 // ============================================================
+// 数据来源标注：[FIX 20261123] 远端数据没加载成功时，界面必须自己说出来。
+// 旧版是静默回落——页面顶部照样显示新时间戳，数字却是内嵌旧快照，
+// 只有把「GMV 为 0、25年同期却有值」这种矛盾逐项对上才能发现问题。
+function markDataSource(remoteOk, meta){
+  const timeEl = document.getElementById('updateTime');
+  if(remoteOk){
+    if(timeEl && meta && meta.syncedAt){
+      // 截止日取实际生效的筛选末日（state.end），不用 meta.dataCutoff：
+      // 云端按「日期<=今天」算 cutoff，当天数据未结算时会比实际数据晚一天（11-23 全 0）。
+      const usedEnd = (typeof state !== 'undefined' && state.end) ? state.end : (meta.dataCutoff || '');
+      timeEl.textContent = '数据更新于 ' + meta.syncedAt +
+        (usedEnd ? '（数据截至 ' + usedEnd + '）' : '');
+    }
+    return;
+  }
+  window.__DATA_SRC = 'embedded';
+  if(timeEl){
+    timeEl.textContent = '内嵌快照 ' + EMBED_AT + ' · 远端数据未加载';
+  }
+  const warnEl = document.getElementById('navWarn');
+  if(warnEl){
+    warnEl.textContent = '显示内嵌快照 · 数据未刷新';
+    warnEl.title = '远端的 dashboard_data.json 没有加载成功' +
+      (window.__DATA_ERR ? '（' + window.__DATA_ERR + '）' : '') +
+      '。当前显示的是本站 HTML 里内嵌的 ' + EMBED_AT + ' 快照，数字可能不是最新。点此重新加载。';
+    warnEl.onclick = function(){ location.reload(); };
+    warnEl.classList.add('show','err');
+  }
+  showSyncToast('远端数据未加载，当前显示内嵌快照（' + EMBED_AT + '），数字可能不是最新。', 'err', 12000);
+}
+
 document.addEventListener('DOMContentLoaded', async ()=>{
   setTimeout(()=>{try{lucide.createIcons()}catch(e){}},50);
 
-  // 先取 sync_meta → 用 syncedAt 当版本号 → 再取外置数据；
-  // 任一环节失败都静默回落到内嵌数据，保证离线/单文件场景仍可用。
+  // 先取 sync_meta → 用 syncedAt 当版本号 → 再取外置数据。
+  // [FIX 20261123] 两处原来会「静默回落到内嵌快照」：
+  //   1) meta 取不到就直接跳过数据加载（meta 只是时间戳，它挂了不该连累数据）；
+  //   2) 数据取不到时没有任何提示，界面照常显示旧快照的数字，只能靠肉眼发现不对。
+  // 现在 meta 与数据解耦，且加载失败会在顶部明确标出「显示内嵌快照」。
   const meta = await fetchMeta();
-  if(meta){
-    applySyncMeta(meta);
-    await loadRemoteData(meta.syncedAt);
-  }
+  if(meta) applySyncMeta(meta);
+  const remoteOk = await loadRemoteData(meta ? meta.syncedAt : '');
 
   initShopKpiPanel();
   initSsKpiPanel();
   initQcKpiPanel();
-  renderOverviewTab();
+  // [FIX 20261123] 日期区间必须先按真实数据重算再渲染：
+  // 原顺序是先 renderOverviewTab 再 applyDateRangeFromData，
+  // 首次渲染用的是生成时写死的 state.end，远端数据更新后会漏掉新增日期。
   applyDateRangeFromData();
+  // 数据来源标注放在日期算完之后：文案里的「数据截至」要用实际生效的 state.end，
+  // 否则会出现「截止 11-23」但区间末日在 11-22 的自相矛盾。
+  markDataSource(remoteOk, meta);
+  renderOverviewTab();
 
   document.getElementById('btnSyncFeishu').addEventListener('click', startFeishuSync);
   document.getElementById('btnSyncGear').addEventListener('click', function(e){
